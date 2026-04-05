@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "expo-web",
+      "runtimeExecutable": "C:\\Users\\ereen\\AppData\\Roaming\\nvm\\v22.11.0\\node.exe",
+      "runtimeArgs": ["node_modules/expo/bin/cli", "start", "--web"],
+      "port": 8081,
+      "autoPort": true
+    }
+  ]
+}

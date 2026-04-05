@@ -1,0 +1,58 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "back": "Geri",
+    "continue": "Devam Et",
+    "or": "veya"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "email": "E-posta",
+    "password": "Şifre",
+    "password_confirm": "Şifre Tekrar",
+    "name": "Ad Soyad",
+    "phone": "Telefon (opsiyonel)",
+    "forgot_password": "Şifremi Unuttum",
+    "reset_password": "Şifreyi Sıfırla",
+    "reset_password_sent": "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.",
+    "no_account": "Hesabınız yok mu?",
+    "have_account": "Zaten hesabınız var mı?",
+    "logout": "Çıkış Yap",
+    "register_choice_title": "Nasıl kayıt olmak istersiniz?",
+    "register_as_user": "Kullanıcı olarak",
+    "register_as_stylist": "Stilist olarak",
+    "user_card_description": "Dolabınızdaki kıyafetlerle kombin önerileri alın",
+    "stylist_card_description": "Müşterilerinize kombin hazırlayın ve gelir kazanın",
+    "register_user_title": "Kullanıcı Kayıt",
+    "register_stylist_title": "Stilist Kayıt",
+    "bio": "Hakkınızda",
+    "bio_placeholder": "Kendinizi kısaca tanıtın...",
+    "cv_text": "Deneyim",
+    "cv_text_placeholder": "Moda/stilistlik deneyiminiz...",
+    "instagram_url": "Instagram",
+    "instagram_placeholder": "@kullaniciadi",
+    "price_per_outfit": "Kombin Başı Fiyat (₺)",
+    "stylist_pending": "Profiliniz incelemeye alındı. Onaylandığında bilgilendirileceksiniz.",
+    "welcome_back": "Tekrar hoş geldiniz!"
+  },
+  "validation": {
+    "email_required": "E-posta adresi gereklidir",
+    "email_invalid": "Geçerli bir e-posta adresi girin",
+    "password_required": "Şifre gereklidir",
+    "password_min": "Şifre en az 8 karakter olmalıdır",
+    "password_mismatch": "Şifreler eşleşmiyor",
+    "name_required": "Ad soyad gereklidir",
+    "bio_required": "Hakkınızda alanı gereklidir",
+    "price_required": "Fiyat gereklidir",
+    "price_min": "Fiyat en az 1₺ olmalıdır"
+  },
+  "errors": {
+    "invalid_credentials": "E-posta veya şifre hatalı",
+    "email_taken": "Bu e-posta adresi zaten kullanılıyor",
+    "generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "network": "İnternet bağlantınızı kontrol edin."
+  }
+}
