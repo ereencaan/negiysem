@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "expo-web",
-      "runtimeExecutable": "C:\\Users\\ereen\\AppData\\Roaming\\nvm\\v22.11.0\\node.exe",
-      "runtimeArgs": ["node_modules/expo/bin/cli", "start", "--web"],
-      "port": 8081,
+      "runtimeExecutable": "C:\\Users\\ereen\\AppData\\Roaming\\nvm\\v20.20.2\\node.exe",
+      "runtimeArgs": ["node_modules/expo/bin/cli", "start", "--web", "--port", "8082"],
+      "port": 8082,
       "autoPort": true
     }
   ]

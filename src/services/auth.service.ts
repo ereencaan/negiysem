@@ -2,22 +2,39 @@ import { AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type {
   AppUser,
+  StylistProfile,
   LoginCredentials,
-  RegisterUserCredentials,
-  RegisterStylistCredentials,
+  RegisterCredentials,
+  CreateStylistProfileData,
   ServiceResult,
 } from '../types/auth.types';
-import type { DbUser } from '../types/database.types';
+import type { DbUser, DbStylistProfile } from '../types/database.types';
 
-function mapDbUserToAppUser(dbUser: DbUser): AppUser {
+function mapDbUserToAppUser(dbUser: DbUser, stylistProfile: StylistProfile | null): AppUser {
   return {
     id: dbUser.id,
     email: dbUser.email,
-    userType: dbUser.user_type,
     name: dbUser.name,
     phone: dbUser.phone,
     profilePhoto: dbUser.profile_photo,
+    instagramUrl: dbUser.instagram_url,
     createdAt: dbUser.created_at,
+    stylistProfile,
+  };
+}
+
+function mapDbStylistProfile(db: DbStylistProfile): StylistProfile {
+  return {
+    id: db.id,
+    userId: db.user_id,
+    bio: db.bio,
+    cvText: db.cv_text,
+    instagramUrl: db.instagram_url,
+    pricePerOutfit: db.price_per_outfit,
+    rating: db.rating,
+    totalReviews: db.total_reviews,
+    isVerified: db.is_verified,
+    createdAt: db.created_at,
   };
 }
 
@@ -43,61 +60,19 @@ export const authService = {
     }
   },
 
-  async signUpUser(credentials: RegisterUserCredentials): Promise<ServiceResult<boolean>> {
+  async signUp(credentials: RegisterCredentials): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: {
           data: {
-            user_type: 'user',
             name: credentials.name,
             phone: credentials.phone || null,
           },
         },
       });
       if (error) return { data: null, error: mapAuthError(error) };
-      return { data: true, error: null };
-    } catch {
-      return { data: null, error: 'errors.generic' };
-    }
-  },
-
-  async signUpStylist(credentials: RegisterStylistCredentials): Promise<ServiceResult<boolean>> {
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: credentials.email,
-        password: credentials.password,
-        options: {
-          data: {
-            user_type: 'stylist',
-            name: credentials.name,
-            phone: credentials.phone || null,
-          },
-        },
-      });
-      if (authError) return { data: null, error: mapAuthError(authError) };
-
-      // Create stylist profile
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('stylist_profiles')
-          .insert({
-            user_id: authData.user.id,
-            bio: credentials.bio,
-            cv_text: credentials.cvText || null,
-            instagram_url: credentials.instagramUrl || null,
-            price_per_outfit: credentials.pricePerOutfit,
-            is_verified: false,
-          });
-        if (profileError) {
-          // Log error - orphaned auth user may need manual cleanup
-          // admin.deleteUser is not available on client side
-          console.error('Stylist profile creation failed:', profileError);
-          return { data: null, error: 'errors.generic' };
-        }
-      }
-
       return { data: true, error: null };
     } catch {
       return { data: null, error: 'errors.generic' };
@@ -123,6 +98,42 @@ export const authService = {
     return data.session;
   },
 
+  async getStylistProfile(userId: string): Promise<StylistProfile | null> {
+    const { data, error } = await supabase
+      .from('stylist_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (data) return mapDbStylistProfile(data as DbStylistProfile);
+    return null;
+  },
+
+  async createStylistProfile(
+    userId: string,
+    profileData: CreateStylistProfileData,
+  ): Promise<ServiceResult<boolean>> {
+    try {
+      const { error } = await supabase
+        .from('stylist_profiles')
+        .insert({
+          user_id: userId,
+          bio: profileData.bio,
+          cv_text: profileData.cvText || null,
+          instagram_url: profileData.instagramUrl || null,
+          price_per_outfit: profileData.pricePerOutfit,
+          is_verified: false,
+        });
+      if (error) {
+        if (error.code === '23505') return { data: null, error: 'errors.already_stylist' };
+        return { data: null, error: 'errors.generic' };
+      }
+      return { data: true, error: null };
+    } catch {
+      return { data: null, error: 'errors.generic' };
+    }
+  },
+
   async getCurrentUser(): Promise<AppUser | null> {
     const session = await this.getSession();
     if (!session) return null;
@@ -135,7 +146,10 @@ export const authService = {
         .eq('id', session.user.id)
         .single();
 
-      if (data && !error) return mapDbUserToAppUser(data as DbUser);
+      if (data && !error) {
+        const stylistProfile = await this.getStylistProfile(session.user.id);
+        return mapDbUserToAppUser(data as DbUser, stylistProfile);
+      }
 
       if (attempt < 2) {
         await new Promise((resolve) => setTimeout(resolve, 500));

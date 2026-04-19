@@ -1,13 +1,13 @@
 import React, { createContext, useEffect, useState, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
-// Session type used for state management, auth methods return ServiceResult<boolean>
 import { authService } from '../services/auth.service';
 import type {
   AppUser,
+  ActiveRole,
   AuthContextType,
   LoginCredentials,
-  RegisterUserCredentials,
-  RegisterStylistCredentials,
+  RegisterCredentials,
+  CreateStylistProfileData,
   ServiceResult,
 } from '../types/auth.types';
 
@@ -17,6 +17,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeRole, setActiveRoleState] = useState<ActiveRole>('user');
+
+  const isStylist = user?.stylistProfile !== null && user?.stylistProfile !== undefined;
 
   useEffect(() => {
     // Restore session on mount
@@ -47,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          setActiveRoleState('user');
         }
       }
     );
@@ -54,29 +58,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Session data is not returned directly - the onAuthStateChange listener
-  // handles session/user state updates automatically when auth events fire.
   const signIn = useCallback(async (credentials: LoginCredentials): Promise<ServiceResult<boolean>> => {
     return authService.signIn(credentials);
   }, []);
 
-  const signUpUser = useCallback(async (credentials: RegisterUserCredentials): Promise<ServiceResult<boolean>> => {
-    return authService.signUpUser(credentials);
-  }, []);
-
-  const signUpStylist = useCallback(async (credentials: RegisterStylistCredentials): Promise<ServiceResult<boolean>> => {
-    return authService.signUpStylist(credentials);
+  const signUp = useCallback(async (credentials: RegisterCredentials): Promise<ServiceResult<boolean>> => {
+    return authService.signUp(credentials);
   }, []);
 
   const signOut = useCallback(async () => {
     await authService.signOut();
     setUser(null);
     setSession(null);
+    setActiveRoleState('user');
   }, []);
 
   const resetPassword = useCallback(async (email: string): Promise<ServiceResult<null>> => {
     return authService.resetPassword(email);
   }, []);
+
+  const setActiveRole = useCallback((role: ActiveRole) => {
+    if (role === 'stylist' && !isStylist) return;
+    setActiveRoleState(role);
+  }, [isStylist]);
+
+  const createStylistProfile = useCallback(async (data: CreateStylistProfileData): Promise<ServiceResult<boolean>> => {
+    if (!user) return { data: null, error: 'errors.generic' };
+    const result = await authService.createStylistProfile(user.id, data);
+    if (result.data) {
+      // Re-fetch user to get updated stylist profile
+      const updatedUser = await authService.getCurrentUser();
+      setUser(updatedUser);
+      setActiveRoleState('stylist');
+    }
+    return result;
+  }, [user]);
 
   return (
     <AuthContext.Provider
@@ -85,11 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         isLoading,
         isAuthenticated: !!session,
+        activeRole,
+        isStylist,
         signIn,
-        signUpUser,
-        signUpStylist,
+        signUp,
         signOut,
         resetPassword,
+        setActiveRole,
+        createStylistProfile,
       }}
     >
       {children}

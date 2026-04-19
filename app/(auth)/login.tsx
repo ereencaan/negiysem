@@ -11,12 +11,13 @@ import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { loginSchema, type LoginFormData } from '../../src/utils/validation';
 import { Button } from '../../src/components/ui/Button';
 import { TextInput } from '../../src/components/ui/TextInput';
 import { FormError } from '../../src/components/ui/FormError';
-import { colors, spacing, fontSize, fontWeight } from '../../src/constants/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -37,8 +38,10 @@ export default function LoginScreen() {
     const result = await signIn(data);
     if (result.error) {
       setFormError(t(result.error));
+      setIsSubmitting(false);
+    } else {
+      router.replace('/(tabs)');
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -51,6 +54,9 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
+          <View style={styles.logoIcon}>
+            <Ionicons name="sparkles" size={28} color={colors.primary} />
+          </View>
           <Text style={styles.logo}>Ne Giysem</Text>
           <Text style={styles.subtitle}>{t('auth.welcome_back')}</Text>
         </View>
@@ -106,7 +112,7 @@ export default function LoginScreen() {
           <Text style={styles.footerText}>{t('auth.no_account')}</Text>
           <Button
             title={t('auth.register')}
-            onPress={() => router.push('/(auth)/register-choice')}
+            onPress={() => router.push('/(auth)/register-user')}
             variant="text"
           />
         </View>
@@ -126,11 +132,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xxxl,
   },
+  logoIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   logo: {
     fontSize: fontSize.xxxl,
     fontWeight: fontWeight.bold,
     color: colors.primary,
-    marginBottom: spacing.sm,
+    letterSpacing: -0.5,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: fontSize.md,

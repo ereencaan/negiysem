@@ -19,8 +19,8 @@ interface ButtonProps {
 
 const variantStyles = {
   primary: { bg: colors.primary, bgPressed: colors.primaryLight, textColor: colors.white },
-  secondary: { bg: colors.white, bgPressed: colors.surface, textColor: colors.primary },
-  text: { bg: 'transparent', bgPressed: 'transparent', textColor: colors.secondary },
+  secondary: { bg: colors.white, bgPressed: colors.primarySoft, textColor: colors.primary },
+  text: { bg: 'transparent', bgPressed: 'transparent', textColor: colors.primary },
 } as const;
 
 export function Button({
@@ -62,12 +62,12 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: 52,
   },
   secondaryBorder: {
     borderWidth: 1.5,
@@ -79,5 +79,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: fontSize.md,
     fontWeight: fontWeight.semibold,
+    letterSpacing: 0.3,
   },
 });

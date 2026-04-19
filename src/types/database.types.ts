@@ -1,5 +1,3 @@
-export type UserType = 'user' | 'stylist';
-
 export type OutfitRequestStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
 export type ProposalStatus = 'pending' | 'approved' | 'rejected';
 export type PaymentStatus = 'pending' | 'completed' | 'refunded' | 'failed';
@@ -10,10 +8,10 @@ export type ClothingCategory = 'ust_giyim' | 'alt_giyim' | 'dis_giyim' | 'ayakka
 export interface DbUser {
   id: string;
   email: string;
-  user_type: UserType;
   name: string | null;
   phone: string | null;
   profile_photo: string | null;
+  instagram_url: string | null;
   created_at: string;
 }
 
@@ -134,5 +132,14 @@ export interface DbNotification {
   body: string;
   data: Record<string, unknown> | null;
   is_read: boolean;
+  created_at: string;
+}
+
+export interface DbFeedPost {
+  id: string;
+  user_id: string;
+  image_path: string;
+  caption: string | null;
+  likes_count: number;
   created_at: string;
 }

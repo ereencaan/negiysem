@@ -1,24 +1,27 @@
 export const colors = {
-  primary: '#1a1a2e',
-  primaryLight: '#16213e',
-  secondary: '#e94560',
-  secondaryLight: '#ff6b6b',
-  accent: '#0f3460',
-  background: '#ffffff',
-  surface: '#f8f9fa',
-  card: '#ffffff',
-  text: '#1a1a2e',
-  textSecondary: '#6c757d',
-  textLight: '#adb5bd',
-  border: '#dee2e6',
-  borderLight: '#e9ecef',
-  error: '#dc3545',
-  errorLight: '#f8d7da',
-  success: '#28a745',
-  successLight: '#d4edda',
-  warning: '#ffc107',
+  // Pudra pembe palette
+  primary: '#c2185b',          // Koyu pudra/rose - ana butonlar
+  primaryLight: '#e91e7a',     // Açık rose
+  primarySoft: '#fce4ec',      // Çok açık pudra bg
+  secondary: '#880e4f',        // Bordo-rose - accent
+  secondaryLight: '#ad1457',   // Lighter bordo
+  accent: '#f8bbd0',           // Pudra pembe accent
+  background: '#fff8f9',       // Sıcak beyaz (hafif pembe tint)
+  surface: '#fef0f3',          // Açık pudra yüzey
+  card: '#ffffff',             // Beyaz kart
+  text: '#3e2723',             // Koyu kahve - okunabilir
+  textSecondary: '#8d6e63',    // Kahve-gri
+  textLight: '#bcaaa4',        // Açık kahve
+  border: '#f3e5e8',           // Pudra border
+  borderLight: '#fce4ec',      // Çok açık border
+  error: '#d32f2f',
+  errorLight: '#ffcdd2',
+  success: '#2e7d32',
+  successLight: '#c8e6c9',
+  warning: '#f9a825',
   white: '#ffffff',
   black: '#000000',
+  gold: '#d4a574',             // Altın/bej - lüks detaylar
 } as const;
 
 export const spacing = {
@@ -42,10 +45,10 @@ export const fontSize = {
 } as const;
 
 export const borderRadius = {
-  sm: 6,
-  md: 10,
-  lg: 16,
-  xl: 24,
+  sm: 8,
+  md: 12,
+  lg: 20,
+  xl: 28,
   full: 9999,
 } as const;
 

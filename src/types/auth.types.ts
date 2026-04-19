@@ -1,15 +1,16 @@
 import type { Session } from '@supabase/supabase-js';
 
-export type UserType = 'user' | 'stylist';
+export type ActiveRole = 'user' | 'stylist';
 
 export interface AppUser {
   id: string;
   email: string;
-  userType: UserType;
   name: string | null;
   phone: string | null;
   profilePhoto: string | null;
+  instagramUrl: string | null;
   createdAt: string;
+  stylistProfile: StylistProfile | null;
 }
 
 export interface StylistProfile {
@@ -30,7 +31,7 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterUserCredentials {
+export interface RegisterCredentials {
   email: string;
   password: string;
   passwordConfirm: string;
@@ -38,12 +39,7 @@ export interface RegisterUserCredentials {
   phone?: string;
 }
 
-export interface RegisterStylistCredentials {
-  email: string;
-  password: string;
-  passwordConfirm: string;
-  name: string;
-  phone?: string;
+export interface CreateStylistProfileData {
   bio: string;
   cvText?: string;
   instagramUrl?: string;
@@ -60,9 +56,12 @@ export interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  activeRole: ActiveRole;
+  isStylist: boolean;
   signIn: (credentials: LoginCredentials) => Promise<ServiceResult<boolean>>;
-  signUpUser: (credentials: RegisterUserCredentials) => Promise<ServiceResult<boolean>>;
-  signUpStylist: (credentials: RegisterStylistCredentials) => Promise<ServiceResult<boolean>>;
+  signUp: (credentials: RegisterCredentials) => Promise<ServiceResult<boolean>>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<ServiceResult<null>>;
+  setActiveRole: (role: ActiveRole) => void;
+  createStylistProfile: (data: CreateStylistProfileData) => Promise<ServiceResult<boolean>>;
 }

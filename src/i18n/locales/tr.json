@@ -5,7 +5,11 @@
     "cancel": "İptal",
     "back": "Geri",
     "continue": "Devam Et",
-    "or": "veya"
+    "or": "veya",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "send": "Gönder",
+    "search": "Ara"
   },
   "auth": {
     "login": "Giriş Yap",
@@ -21,13 +25,7 @@
     "no_account": "Hesabınız yok mu?",
     "have_account": "Zaten hesabınız var mı?",
     "logout": "Çıkış Yap",
-    "register_choice_title": "Nasıl kayıt olmak istersiniz?",
-    "register_as_user": "Kullanıcı olarak",
-    "register_as_stylist": "Stilist olarak",
-    "user_card_description": "Dolabınızdaki kıyafetlerle kombin önerileri alın",
-    "stylist_card_description": "Müşterilerinize kombin hazırlayın ve gelir kazanın",
-    "register_user_title": "Kullanıcı Kayıt",
-    "register_stylist_title": "Stilist Kayıt",
+    "register_title": "Kayıt Ol",
     "bio": "Hakkınızda",
     "bio_placeholder": "Kendinizi kısaca tanıtın...",
     "cv_text": "Deneyim",
@@ -36,7 +34,125 @@
     "instagram_placeholder": "@kullaniciadi",
     "price_per_outfit": "Kombin Başı Fiyat (₺)",
     "stylist_pending": "Profiliniz incelemeye alındı. Onaylandığında bilgilendirileceksiniz.",
-    "welcome_back": "Tekrar hoş geldiniz!"
+    "welcome_back": "Tekrar hoş geldiniz!",
+    "welcome_subtitle": "Stilinizi keşfedin",
+    "welcome_description": "Gardırobunuzdaki kıyafetlerle profesyonel kombin önerileri alın veya stilist olarak müşterilerinize yardımcı olun.",
+    "welcome_for_users": "Kombin önerileri alın",
+    "welcome_for_stylists": "Stilist olarak kazanın"
+  },
+  "tabs": {
+    "home": "Keşfet",
+    "wardrobe": "Gardırop",
+    "stylists": "Stilistler",
+    "outfits": "Kombilerim",
+    "profile": "Profil",
+    "requests": "Talepler"
+  },
+  "feed": {
+    "title": "Keşfet",
+    "empty_title": "Henüz paylaşım yok",
+    "empty_description": "İlk kombinini paylaşan sen ol!",
+    "share": "Paylaş",
+    "caption_placeholder": "Kombinini anlat...",
+    "post_shared": "Paylaşıldı!",
+    "new_post": "Yeni Paylaşım"
+  },
+  "home": {
+    "welcome": "Merhaba, {{name}}!",
+    "welcome_default": "Merhaba!",
+    "quick_actions": "Hızlı İşlemler",
+    "go_to_wardrobe": "Gardırobuma Git",
+    "find_stylist": "Stilist Bul",
+    "active_requests": "Aktif Talepler",
+    "no_active_requests": "Aktif talebiniz yok",
+    "stylist_dashboard": "Stilist Paneli",
+    "pending_requests": "Bekleyen Talepler",
+    "total_earnings": "Toplam Kazanç"
+  },
+  "wardrobe": {
+    "title": "Gardırobum",
+    "add_item": "Kıyafet Ekle",
+    "empty_title": "Gardırobunuz boş",
+    "empty_description": "İlk kıyafetinizi ekleyerek başlayın",
+    "category": "Kategori",
+    "subcategory": "Alt Kategori",
+    "color": "Renk",
+    "brand": "Marka",
+    "season": "Sezon",
+    "description": "Açıklama",
+    "select_photo": "Fotoğraf Seç",
+    "take_photo": "Fotoğraf Çek",
+    "choose_from_gallery": "Galeriden Seç",
+    "item_added": "Kıyafet eklendi!",
+    "item_deleted": "Kıyafet silindi",
+    "all_categories": "Tümü",
+    "seasons": {
+      "ilkbahar_yaz": "İlkbahar/Yaz",
+      "sonbahar_kis": "Sonbahar/Kış",
+      "tum_sezonlar": "Tüm Sezonlar"
+    }
+  },
+  "stylists": {
+    "title": "Stilistler",
+    "empty_title": "Henüz stilist yok",
+    "empty_description": "Yakında stilistler burada listelenecek",
+    "per_outfit": "/ kombin",
+    "reviews": "değerlendirme",
+    "no_reviews": "Henüz değerlendirme yok",
+    "verified": "Onaylı",
+    "send_request": "Kombin Talebi Gönder",
+    "request_sent": "Talep gönderildi!",
+    "occasion": "Durum / Etkinlik",
+    "occasion_placeholder": "Örn: İş toplantısı, düğün, günlük...",
+    "budget": "Bütçe Aralığı",
+    "budget_placeholder": "Örn: 500-1000₺",
+    "message": "Mesajınız",
+    "message_placeholder": "Stiliste iletmek istediğiniz notlar..."
+  },
+  "outfits": {
+    "title": "Kombilerim",
+    "active": "Aktif",
+    "history": "Geçmiş",
+    "empty_title": "Henüz kombin talebiniz yok",
+    "empty_description": "Bir stilist bulun ve ilk kombin talebinizi gönderin",
+    "find_stylist": "Stilist Bul",
+    "status": {
+      "pending": "Bekliyor",
+      "accepted": "Kabul Edildi",
+      "in_progress": "Hazırlanıyor",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal Edildi"
+    }
+  },
+  "requests": {
+    "title": "Gelen Talepler",
+    "empty_title": "Henüz talep yok",
+    "empty_description": "Müşterilerinizden gelen talepler burada görünecek",
+    "accept": "Kabul Et",
+    "reject": "Reddet",
+    "from": "Müşteri"
+  },
+  "profile": {
+    "title": "Profil",
+    "edit_profile": "Profili Düzenle",
+    "stylist_profile": "Stilist Profili",
+    "account_info": "Hesap Bilgileri",
+    "member_since": "Üyelik Tarihi",
+    "instagram": "Instagram",
+    "instagram_placeholder": "@kullaniciadi",
+    "profile_updated": "Profil güncellendi!",
+    "stats": "İstatistikler",
+    "total_outfits": "Toplam Kombin",
+    "approved_outfits": "Onaylanan",
+    "wardrobe_count": "Gardırop",
+    "pending_outfits": "Bekleyen"
+  },
+  "stylist": {
+    "become_stylist": "Stilist Ol",
+    "become_stylist_description": "Stilist profilinizi oluşturarak müşterilere kombin hazırlayabilirsiniz.",
+    "profile_created": "Stilist profiliniz oluşturuldu!",
+    "switch_to_user": "Kullanıcı Modu",
+    "switch_to_stylist": "Stilist Modu"
   },
   "validation": {
     "email_required": "E-posta adresi gereklidir",
@@ -53,6 +169,7 @@
     "invalid_credentials": "E-posta veya şifre hatalı",
     "email_taken": "Bu e-posta adresi zaten kullanılıyor",
     "generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
-    "network": "İnternet bağlantınızı kontrol edin."
+    "network": "İnternet bağlantınızı kontrol edin.",
+    "already_stylist": "Zaten bir stilist profiliniz var."
   }
 }
