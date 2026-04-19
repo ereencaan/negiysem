@@ -43,3 +43,7 @@ yarn-error.*
 
 # Supabase
 supabase/.temp/
+
+# Local machine-specific config
+.mcp.json
+.claude/settings.local.json
