@@ -36,15 +36,17 @@ export default function OutfitsScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     const load = activeRole === 'stylist'
       ? requestService.getStylistRequests(user.id)
       : requestService.getUserRequests(user.id);
 
-    load.then(data => {
-      setRequests(data);
-      setIsLoading(false);
-    });
+    load
+      .then(data => setRequests(data))
+      .finally(() => setIsLoading(false));
   }, [user, activeRole]);
 
   const statusLabel = (status: OutfitRequestStatus) => {

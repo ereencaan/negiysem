@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../src/components/ui/Button';
+import { Logo } from '../../src/components/ui/Logo';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 export default function WelcomeScreen() {
@@ -14,11 +15,7 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.topSection}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="sparkles" size={36} color={colors.primary} />
-          </View>
-          <Text style={styles.logo}>Ne Giysem</Text>
-          <Text style={styles.subtitle}>{t('auth.welcome_subtitle')}</Text>
+          <Logo size="large" showText showSubtitle subtitle={t('auth.welcome_subtitle')} />
         </View>
 
         <View style={styles.features}>
@@ -76,28 +73,6 @@ const styles = StyleSheet.create({
   topSection: {
     alignItems: 'center',
     marginBottom: spacing.xxxl,
-  },
-  logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primarySoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  logo: {
-    fontSize: 40,
-    fontWeight: fontWeight.bold,
-    color: colors.primary,
-    letterSpacing: -0.5,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: fontSize.lg,
-    color: colors.textSecondary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
   },
   features: {
     marginBottom: spacing.xl,

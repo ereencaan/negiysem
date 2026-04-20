@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+const strongPasswordSchema = z
+  .string()
+  .min(8, 'validation.password_min')
+  .regex(/[a-z]/, 'validation.password_lowercase')
+  .regex(/[A-Z]/, 'validation.password_uppercase')
+  .regex(/[0-9]/, 'validation.password_number')
+  .regex(/[^A-Za-z0-9]/, 'validation.password_special');
+
 export const loginSchema = z.object({
   email: z
     .string()
@@ -7,7 +15,7 @@ export const loginSchema = z.object({
     .email('validation.email_invalid'),
   password: z
     .string()
-    .min(8, 'validation.password_min'),
+    .min(1, 'validation.password_required'),
 });
 
 export const registerUserSchema = z
@@ -18,9 +26,7 @@ export const registerUserSchema = z
       .min(1, 'validation.email_required')
       .email('validation.email_invalid'),
     phone: z.string().optional(),
-    password: z
-      .string()
-      .min(8, 'validation.password_min'),
+    password: strongPasswordSchema,
     passwordConfirm: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirm, {

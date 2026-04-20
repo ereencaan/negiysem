@@ -38,11 +38,16 @@ export default function WardrobeScreen() {
   ];
 
   const loadItems = useCallback(async () => {
-    if (!user) return;
-    setIsLoading(true);
-    const data = await wardrobeService.getWardrobeItems(user.id);
-    setItems(data);
-    setIsLoading(false);
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const data = await wardrobeService.getWardrobeItems(user.id);
+      setItems(data);
+    } finally {
+      setIsLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {

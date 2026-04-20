@@ -17,6 +17,7 @@ import { loginSchema, type LoginFormData } from '../../src/utils/validation';
 import { Button } from '../../src/components/ui/Button';
 import { TextInput } from '../../src/components/ui/TextInput';
 import { FormError } from '../../src/components/ui/FormError';
+import { Logo } from '../../src/components/ui/Logo';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 export default function LoginScreen() {
@@ -55,10 +56,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <View style={styles.logoIcon}>
-            <Ionicons name="sparkles" size={28} color={colors.primary} />
-          </View>
-          <Text style={styles.logo}>Ne Giysem</Text>
+          <Logo size="medium" showText />
           <Text style={styles.subtitle}>{t('auth.welcome_back')}</Text>
         </View>
 
@@ -139,22 +137,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: spacing.xxxl,
-  },
-  logoIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primarySoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  logo: {
-    fontSize: fontSize.xxxl,
-    fontWeight: fontWeight.bold,
-    color: colors.primary,
-    letterSpacing: -0.5,
-    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: fontSize.md,

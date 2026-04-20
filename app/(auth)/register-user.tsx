@@ -122,6 +122,7 @@ export default function RegisterUserScreen() {
             />
           )}
         />
+        <Text style={styles.passwordHint}>{t('auth.password_hint')}</Text>
 
         <Controller
           control={control}
@@ -185,5 +186,12 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
+  },
+  passwordHint: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.sm,
+    lineHeight: 16,
   },
 });

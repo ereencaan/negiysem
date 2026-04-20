@@ -24,10 +24,9 @@ export default function StylistsScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    stylistService.getStylistList().then(data => {
-      setStylists(data);
-      setIsLoading(false);
-    });
+    stylistService.getStylistList()
+      .then(data => setStylists(data))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const renderStylist = ({ item }: { item: StylistListItem }) => (

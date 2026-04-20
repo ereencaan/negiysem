@@ -27,6 +27,7 @@
     "logout": "Çıkış Yap",
     "register_title": "Kayıt Ol",
     "register_success": "Kayıt başarılı! Giriş yapabilirsiniz.",
+    "password_hint": "En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir.",
     "bio": "Hakkınızda",
     "bio_placeholder": "Kendinizi kısaca tanıtın...",
     "cv_text": "Deneyim",
@@ -160,6 +161,10 @@
     "email_invalid": "Geçerli bir e-posta adresi girin",
     "password_required": "Şifre gereklidir",
     "password_min": "Şifre en az 8 karakter olmalıdır",
+    "password_lowercase": "Şifre en az bir küçük harf içermelidir",
+    "password_uppercase": "Şifre en az bir büyük harf içermelidir",
+    "password_number": "Şifre en az bir rakam içermelidir",
+    "password_special": "Şifre en az bir özel karakter içermelidir (ör: !@#$)",
     "password_mismatch": "Şifreler eşleşmiyor",
     "name_required": "Ad soyad gereklidir",
     "bio_required": "Hakkınızda alanı gereklidir",
@@ -169,6 +174,9 @@
   "errors": {
     "invalid_credentials": "E-posta veya şifre hatalı",
     "email_taken": "Bu e-posta adresi zaten kullanılıyor",
+    "email_not_confirmed": "E-posta adresinizi doğrulamanız gerekiyor. Lütfen gelen kutunuzu kontrol edin.",
+    "rate_limit": "Çok fazla deneme yaptınız. Lütfen bir süre bekleyip tekrar deneyin.",
+    "weak_password": "Şifre çok zayıf. Daha güçlü bir şifre seçin.",
     "generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
     "network": "İnternet bağlantınızı kontrol edin.",
     "already_stylist": "Zaten bir stilist profiliniz var."

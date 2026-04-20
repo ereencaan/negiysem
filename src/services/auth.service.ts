@@ -43,6 +43,9 @@ function mapAuthError(error: AuthError): string {
   if (msg.includes('invalid login credentials')) return 'errors.invalid_credentials';
   if (msg.includes('user already registered')) return 'errors.email_taken';
   if (msg.includes('email already')) return 'errors.email_taken';
+  if (msg.includes('email not confirmed')) return 'errors.email_not_confirmed';
+  if (msg.includes('rate limit') || msg.includes('too many')) return 'errors.rate_limit';
+  if (msg.includes('password should be') || msg.includes('weak password')) return 'errors.weak_password';
   return 'errors.generic';
 }
 
