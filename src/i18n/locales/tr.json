@@ -154,11 +154,32 @@
     "mark_complete": "Tamamlandı Olarak İşaretle",
     "from": "Müşteri",
     "not_found": "Talep bulunamadı",
-    "view_client_wardrobe": "Müşterinin Gardırobunu Gör"
+    "view_client_wardrobe": "Müşterinin Gardırobunu Gör",
+    "build_outfit": "Kombin Öner"
   },
   "chat": {
     "empty": "Henüz mesaj yok. İlk mesajı göndererek sohbete başlayın.",
     "placeholder": "Mesajınızı yazın..."
+  },
+  "proposal": {
+    "create": "Kombin Öner",
+    "title": "Kombin Başlığı",
+    "title_placeholder": "Örn: İş görüşmesi için şık kombin",
+    "title_required": "Lütfen bir başlık girin",
+    "notes": "Açıklama",
+    "notes_placeholder": "Müşterinize kombini anlatın...",
+    "items_required": "En az bir kıyafet ya da link ekleyin",
+    "selected": "{{count}} parça seçildi",
+    "external_links": "Alışveriş Linkleri (opsiyonel)",
+    "external_help": "Kombini tamamlayacak dış ürünler ekleyin (Trendyol, Zara, H&M vb.)",
+    "product_name": "Ürün adı (ör. Bej Trençkot)",
+    "add_link": "Ekle",
+    "send": "Öneriyi Gönder",
+    "created": "Kombin önerisi gönderildi!",
+    "created_body": "Müşterinize bildirim gönderildi.",
+    "list_title": "Stilistinizin Önerileri",
+    "from_wardrobe": "Gardırobundan",
+    "shop_these": "Alışveriş Önerileri"
   },
   "notifications": {
     "title": "Bildirimler",

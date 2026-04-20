@@ -21,9 +21,12 @@ import {
   type OutfitRequestWithDetails,
 } from '../../src/services/request.service';
 import { messageService, type ChatMessage } from '../../src/services/message.service';
+import { proposalService, type OutfitProposal } from '../../src/services/proposal.service';
 import { supabase } from '../../src/lib/supabase';
 import { Button } from '../../src/components/ui/Button';
 import { Badge } from '../../src/components/ui/Badge';
+import { Card } from '../../src/components/ui/Card';
+import { Image, Linking } from 'react-native';
 import type { OutfitRequestStatus } from '../../src/types/database.types';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
@@ -38,6 +41,7 @@ export default function RequestDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [request, setRequest] = useState<OutfitRequestWithDetails | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [proposals, setProposals] = useState<OutfitProposal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -51,12 +55,14 @@ export default function RequestDetailScreen() {
       setIsLoading(false);
       return;
     }
-    const [req, msgs] = await Promise.all([
+    const [req, msgs, props] = await Promise.all([
       requestService.getRequestById(id),
       messageService.getMessages(id),
+      proposalService.getProposalsForRequest(id),
     ]);
     setRequest(req);
     setMessages(msgs);
+    setProposals(props);
     setIsLoading(false);
   }, [id]);
 
@@ -216,13 +222,13 @@ export default function RequestDetailScreen() {
             <Pressable
               onPress={() =>
                 router.push(
-                  `/(tabs)/client-wardrobe?userId=${request.user_id}&name=${encodeURIComponent(request.userName || '')}`,
+                  `/(tabs)/client-wardrobe?userId=${request.user_id}&name=${encodeURIComponent(request.userName || '')}&requestId=${request.id}`,
                 )
               }
               style={styles.wardrobeLink}
             >
-              <Ionicons name="shirt-outline" size={16} color={colors.primary} />
-              <Text style={styles.wardrobeLinkText}>{t('requests.view_client_wardrobe')}</Text>
+              <Ionicons name="sparkles" size={16} color={colors.primary} />
+              <Text style={styles.wardrobeLinkText}>{t('requests.build_outfit')}</Text>
             </Pressable>
           )}
         </View>
@@ -233,6 +239,66 @@ export default function RequestDetailScreen() {
           renderItem={renderMessage}
           keyExtractor={m => m.id}
           contentContainerStyle={styles.messages}
+          ListHeaderComponent={
+            proposals.length > 0 ? (
+              <View style={styles.proposalsSection}>
+                <Text style={styles.proposalsHeader}>
+                  {t('proposal.list_title')} ({proposals.length})
+                </Text>
+                {proposals.map(p => (
+                  <Card key={p.id} style={styles.proposalCard}>
+                    <Text style={styles.proposalTitle}>{p.title}</Text>
+                    {p.notes && <Text style={styles.proposalNotes}>{p.notes}</Text>}
+
+                    {p.items.length > 0 && (
+                      <>
+                        <Text style={styles.proposalSection}>{t('proposal.from_wardrobe')}</Text>
+                        <FlatList
+                          horizontal
+                          data={p.items}
+                          keyExtractor={i => i.id}
+                          showsHorizontalScrollIndicator={false}
+                          renderItem={({ item: wi }) => (
+                            <View style={styles.propItem}>
+                              <Image source={{ uri: wi.photoUrl }} style={styles.propItemImg} />
+                              <Text style={styles.propItemText} numberOfLines={1}>
+                                {wi.brand || wi.category.replace('_', ' ')}
+                              </Text>
+                            </View>
+                          )}
+                          contentContainerStyle={{ gap: 8 }}
+                        />
+                      </>
+                    )}
+
+                    {p.externalProducts.length > 0 && (
+                      <>
+                        <Text style={styles.proposalSection}>{t('proposal.shop_these')}</Text>
+                        {p.externalProducts.map((ep, i) => (
+                          <Pressable
+                            key={i}
+                            onPress={() => Linking.openURL(ep.url)}
+                            style={styles.extLinkRow}
+                          >
+                            <Ionicons name="link-outline" size={16} color={colors.secondary} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.extLinkName}>{ep.name}</Text>
+                              {ep.store && <Text style={styles.extLinkStore}>{ep.store}</Text>}
+                            </View>
+                            <Ionicons name="open-outline" size={16} color={colors.primary} />
+                          </Pressable>
+                        ))}
+                      </>
+                    )}
+
+                    <Text style={styles.proposalDate}>
+                      {new Date(p.createdAt).toLocaleDateString('tr-TR')}
+                    </Text>
+                  </Card>
+                ))}
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <Text style={styles.emptyChat}>{t('chat.empty')}</Text>
           }
@@ -314,6 +380,81 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.primary,
     fontWeight: fontWeight.semibold,
+  },
+  proposalsSection: {
+    marginBottom: spacing.md,
+  },
+  proposalsHeader: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  proposalCard: {
+    marginBottom: spacing.md,
+  },
+  proposalTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  proposalNotes: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.sm,
+  },
+  proposalSection: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  propItem: {
+    width: 80,
+    alignItems: 'center',
+  },
+  propItemImg: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
+  },
+  propItemText: {
+    fontSize: fontSize.xs,
+    color: colors.text,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  extLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xs,
+  },
+  extLinkName: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+    fontWeight: fontWeight.medium,
+  },
+  extLinkStore: {
+    fontSize: fontSize.xs,
+    color: colors.secondary,
+    marginTop: 2,
+  },
+  proposalDate: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+    marginTop: spacing.sm,
+    textAlign: 'right',
   },
   messages: {
     padding: spacing.md,

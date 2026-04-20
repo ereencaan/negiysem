@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 320,
-    resizeMode: 'cover',
+    height: 360,
+    resizeMode: 'contain',
     backgroundColor: colors.surface,
   },
   actionsRow: {
