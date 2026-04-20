@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../src/hooks/useAuth';
 import { requestService, type OutfitRequestWithDetails } from '../../src/services/request.service';
@@ -30,24 +30,28 @@ function statusVariant(status: OutfitRequestStatus) {
 
 export default function OutfitsScreen() {
   const { t } = useTranslation();
-  const { user, activeRole } = useAuth();
+  const { user, activeRole, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [requests, setRequests] = useState<OutfitRequestWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-    const load = activeRole === 'stylist'
-      ? requestService.getStylistRequests(user.id)
-      : requestService.getUserRequests(user.id);
+  useFocusEffect(
+    useCallback(() => {
+      if (authLoading) return;
+      if (!user) {
+        setRequests([]);
+        setIsLoading(false);
+        return;
+      }
+      const load = activeRole === 'stylist'
+        ? requestService.getStylistRequests(user.id)
+        : requestService.getUserRequests(user.id);
 
-    load
-      .then(data => setRequests(data))
-      .finally(() => setIsLoading(false));
-  }, [user, activeRole]);
+      load
+        .then(data => setRequests(data))
+        .finally(() => setIsLoading(false));
+    }, [user, activeRole, authLoading]),
+  );
 
   const statusLabel = (status: OutfitRequestStatus) => {
     const key = `outfits.status.${status}` as const;

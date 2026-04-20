@@ -4,45 +4,34 @@ import {
   Text,
   Image,
   ScrollView,
-  Alert,
   Pressable,
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../src/hooks/useAuth';
 import {
   stylistService,
   type StylistListItem,
   type StylistPortfolioItem,
 } from '../../src/services/stylist.service';
-import { requestService } from '../../src/services/request.service';
-import { wardrobeService } from '../../src/services/wardrobe.service';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Badge } from '../../src/components/ui/Badge';
 import { Button } from '../../src/components/ui/Button';
-import { TextInput } from '../../src/components/ui/TextInput';
 import { Card } from '../../src/components/ui/Card';
+import { RequestModal } from '../../src/components/ui/RequestModal';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 export default function StylistDetailScreen() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [stylist, setStylist] = useState<StylistListItem | null>(null);
   const [portfolio, setPortfolio] = useState<StylistPortfolioItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showRequestForm, setShowRequestForm] = useState(false);
-  const [occasion, setOccasion] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [wardrobeCount, setWardrobeCount] = useState<number | null>(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -52,49 +41,13 @@ export default function StylistDetailScreen() {
     Promise.all([
       stylistService.getStylistById(id),
       stylistService.getStylistPortfolio(id),
-      user ? wardrobeService.getWardrobeItems(user.id) : Promise.resolve([]),
     ])
-      .then(([stylistData, portfolioData, wardrobeItems]) => {
+      .then(([stylistData, portfolioData]) => {
         setStylist(stylistData);
         setPortfolio(portfolioData);
-        setWardrobeCount(wardrobeItems.length);
       })
       .finally(() => setIsLoading(false));
-  }, [id, user]);
-
-  const handleRequestStart = () => {
-    if (wardrobeCount === 0) {
-      Alert.alert(
-        t('stylists.wardrobe_required_title'),
-        t('stylists.wardrobe_required_body'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('wardrobe.add_item'), onPress: () => router.push('/(tabs)/add-wardrobe-item') },
-        ],
-      );
-      return;
-    }
-    setShowRequestForm(true);
-  };
-
-  const sendRequest = async () => {
-    if (!user || !stylist) return;
-    setIsSending(true);
-    const result = await requestService.createOutfitRequest({
-      userId: user.id,
-      stylistId: stylist.id,
-      occasion: occasion || undefined,
-      eventDate: eventDate || undefined,
-      message: message || undefined,
-    });
-    if (result.data) {
-      Alert.alert(t('stylists.request_sent'), t('stylists.request_sent_body'));
-      router.back();
-    } else {
-      Alert.alert(t('errors.generic'));
-    }
-    setIsSending(false);
-  };
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -151,6 +104,12 @@ export default function StylistDetailScreen() {
           )}
         </Card>
 
+        <Button
+          title={t('stylists.send_request')}
+          onPress={() => setShowRequestModal(true)}
+          style={styles.requestButton}
+        />
+
         {stylist.cvText && (
           <Card style={styles.section}>
             <Text style={styles.cvTitle}>{t('stylists.cv_title')}</Text>
@@ -171,42 +130,15 @@ export default function StylistDetailScreen() {
           </View>
         )}
 
-        {!showRequestForm ? (
-          <Button
-            title={t('stylists.send_request')}
-            onPress={handleRequestStart}
-          />
-        ) : (
-          <Card style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('stylists.send_request')}</Text>
-            <TextInput
-              label={t('stylists.occasion')}
-              value={occasion}
-              onChangeText={setOccasion}
-              placeholder={t('stylists.occasion_placeholder')}
-            />
-            <TextInput
-              label={t('stylists.event_date')}
-              value={eventDate}
-              onChangeText={setEventDate}
-              placeholder={t('stylists.event_date_placeholder')}
-            />
-            <TextInput
-              label={t('stylists.message')}
-              value={message}
-              onChangeText={setMessage}
-              placeholder={t('stylists.message_placeholder')}
-              multiline
-              numberOfLines={3}
-            />
-            <Button
-              title={t('common.send')}
-              onPress={sendRequest}
-              isLoading={isSending}
-            />
-          </Card>
-        )}
       </ScrollView>
+
+      <RequestModal
+        visible={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        stylistId={stylist.id}
+        stylistName={stylist.name || 'Stilist'}
+        openAddWardrobeItem={() => router.push('/(tabs)/add-wardrobe-item')}
+      />
     </SafeAreaView>
   );
 }
@@ -314,5 +246,8 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: borderRadius.md,
     backgroundColor: colors.surface,
+  },
+  requestButton: {
+    marginBottom: spacing.lg,
   },
 });

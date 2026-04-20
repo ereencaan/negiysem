@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  Pressable,
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
@@ -15,13 +16,15 @@ import { Card } from '../../src/components/ui/Card';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Badge } from '../../src/components/ui/Badge';
 import { EmptyState } from '../../src/components/ui/EmptyState';
-import { colors, spacing, fontSize, fontWeight } from '../../src/constants/theme';
+import { RequestModal } from '../../src/components/ui/RequestModal';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 export default function StylistsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [stylists, setStylists] = useState<StylistListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [requestTarget, setRequestTarget] = useState<StylistListItem | null>(null);
 
   useEffect(() => {
     stylistService.getStylistList()
@@ -66,6 +69,16 @@ export default function StylistsScreen() {
               </Text>
             )}
           </View>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              setRequestTarget(item);
+            }}
+            style={styles.requestBtn}
+          >
+            <Ionicons name="send" size={14} color={colors.white} />
+            <Text style={styles.requestBtnText}>{t('stylists.request_short')}</Text>
+          </Pressable>
         </View>
       </View>
     </Card>
@@ -95,6 +108,16 @@ export default function StylistsScreen() {
           renderItem={renderStylist}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
+        />
+      )}
+
+      {requestTarget && (
+        <RequestModal
+          visible={!!requestTarget}
+          onClose={() => setRequestTarget(null)}
+          stylistId={requestTarget.id}
+          stylistName={requestTarget.name || 'Stilist'}
+          openAddWardrobeItem={() => router.push('/(tabs)/add-wardrobe-item')}
         />
       )}
     </SafeAreaView>
@@ -159,5 +182,21 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.secondary,
     fontWeight: fontWeight.medium,
+  },
+  requestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    marginTop: spacing.sm,
+  },
+  requestBtnText: {
+    color: colors.white,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
   },
 });

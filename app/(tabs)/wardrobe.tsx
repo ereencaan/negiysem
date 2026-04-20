@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -21,7 +21,7 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/c
 
 export default function WardrobeScreen() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<WardrobeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +38,9 @@ export default function WardrobeScreen() {
   ];
 
   const loadItems = useCallback(async () => {
+    if (authLoading) return;
     if (!user) {
+      setItems([]);
       setIsLoading(false);
       return;
     }
@@ -48,11 +50,13 @@ export default function WardrobeScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+  useFocusEffect(
+    useCallback(() => {
+      loadItems();
+    }, [loadItems]),
+  );
 
   const filteredItems = selectedCategory
     ? items.filter(item => item.category === selectedCategory)

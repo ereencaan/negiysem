@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -17,20 +17,22 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, wardrobe: 0 });
 
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      requestService.getUserRequests(user.id),
-      wardrobeService.getWardrobeItems(user.id),
-    ]).then(([requests, items]) => {
-      setStats({
-        total: requests.length,
-        approved: requests.filter(r => r.status === 'completed').length,
-        pending: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
-        wardrobe: items.length,
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      Promise.all([
+        requestService.getUserRequests(user.id),
+        wardrobeService.getWardrobeItems(user.id),
+      ]).then(([requests, items]) => {
+        setStats({
+          total: requests.length,
+          approved: requests.filter(r => r.status === 'completed').length,
+          pending: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
+          wardrobe: items.length,
+        });
       });
-    });
-  }, [user]);
+    }, [user]),
+  );
 
   const memberDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })
