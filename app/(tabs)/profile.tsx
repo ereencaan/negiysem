@@ -118,9 +118,9 @@ export default function ProfileScreen() {
 
         <Button
           title={t('auth.logout')}
-          onPress={async () => {
-            await signOut();
+          onPress={() => {
             router.replace('/(auth)/welcome');
+            signOut();
           }}
           variant="secondary"
           style={styles.logoutBtn}

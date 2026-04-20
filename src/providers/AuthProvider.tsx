@@ -67,10 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await authService.signOut();
+    // Optimistically clear local state first so UI reacts immediately
     setUser(null);
     setSession(null);
     setActiveRoleState('user');
+    try {
+      await authService.signOut();
+    } catch (err) {
+      console.error('Sign out failed:', err);
+    }
   }, []);
 
   const resetPassword = useCallback(async (email: string): Promise<ServiceResult<null>> => {
