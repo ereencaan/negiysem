@@ -55,6 +55,7 @@ export interface DbOutfitRequest {
   stylist_id: string;
   occasion: string | null;
   budget_range: string | null;
+  event_date: string | null;
   message: string | null;
   status: OutfitRequestStatus;
   created_at: string;

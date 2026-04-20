@@ -21,6 +21,7 @@ import {
   type StylistPortfolioItem,
 } from '../../src/services/stylist.service';
 import { requestService } from '../../src/services/request.service';
+import { wardrobeService } from '../../src/services/wardrobe.service';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Badge } from '../../src/components/ui/Badge';
 import { Button } from '../../src/components/ui/Button';
@@ -38,9 +39,10 @@ export default function StylistDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [occasion, setOccasion] = useState('');
-  const [budget, setBudget] = useState('');
+  const [eventDate, setEventDate] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [wardrobeCount, setWardrobeCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -50,13 +52,30 @@ export default function StylistDetailScreen() {
     Promise.all([
       stylistService.getStylistById(id),
       stylistService.getStylistPortfolio(id),
+      user ? wardrobeService.getWardrobeItems(user.id) : Promise.resolve([]),
     ])
-      .then(([stylistData, portfolioData]) => {
+      .then(([stylistData, portfolioData, wardrobeItems]) => {
         setStylist(stylistData);
         setPortfolio(portfolioData);
+        setWardrobeCount(wardrobeItems.length);
       })
       .finally(() => setIsLoading(false));
-  }, [id]);
+  }, [id, user]);
+
+  const handleRequestStart = () => {
+    if (wardrobeCount === 0) {
+      Alert.alert(
+        t('stylists.wardrobe_required_title'),
+        t('stylists.wardrobe_required_body'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('wardrobe.add_item'), onPress: () => router.push('/(tabs)/add-wardrobe-item') },
+        ],
+      );
+      return;
+    }
+    setShowRequestForm(true);
+  };
 
   const sendRequest = async () => {
     if (!user || !stylist) return;
@@ -65,12 +84,14 @@ export default function StylistDetailScreen() {
       userId: user.id,
       stylistId: stylist.id,
       occasion: occasion || undefined,
-      budgetRange: budget || undefined,
+      eventDate: eventDate || undefined,
       message: message || undefined,
     });
     if (result.data) {
-      Alert.alert(t('stylists.request_sent'));
+      Alert.alert(t('stylists.request_sent'), t('stylists.request_sent_body'));
       router.back();
+    } else {
+      Alert.alert(t('errors.generic'));
     }
     setIsSending(false);
   };
@@ -153,7 +174,7 @@ export default function StylistDetailScreen() {
         {!showRequestForm ? (
           <Button
             title={t('stylists.send_request')}
-            onPress={() => setShowRequestForm(true)}
+            onPress={handleRequestStart}
           />
         ) : (
           <Card style={styles.section}>
@@ -165,10 +186,10 @@ export default function StylistDetailScreen() {
               placeholder={t('stylists.occasion_placeholder')}
             />
             <TextInput
-              label={t('stylists.budget')}
-              value={budget}
-              onChangeText={setBudget}
-              placeholder={t('stylists.budget_placeholder')}
+              label={t('stylists.event_date')}
+              value={eventDate}
+              onChangeText={setEventDate}
+              placeholder={t('stylists.event_date_placeholder')}
             />
             <TextInput
               label={t('stylists.message')}

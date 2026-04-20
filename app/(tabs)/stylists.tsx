@@ -44,6 +44,12 @@ export default function StylistsScreen() {
           {item.bio && (
             <Text style={styles.bio} numberOfLines={2}>{item.bio}</Text>
           )}
+          {item.instagramUrl && (
+            <View style={styles.instagramRow}>
+              <Ionicons name="logo-instagram" size={12} color={colors.secondary} />
+              <Text style={styles.instagram}>{item.instagramUrl}</Text>
+            </View>
+          )}
           <View style={styles.cardFooter}>
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={14} color="#f5a623" />
@@ -142,5 +148,16 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
     color: colors.secondary,
+  },
+  instagramRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: spacing.sm,
+  },
+  instagram: {
+    fontSize: fontSize.xs,
+    color: colors.secondary,
+    fontWeight: fontWeight.medium,
   },
 });

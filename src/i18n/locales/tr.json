@@ -104,6 +104,11 @@
     "verified": "Onaylı",
     "portfolio": "Kombin Galerisi",
     "cv_title": "Deneyim ve Eğitim",
+    "event_date": "Etkinlik Tarihi (opsiyonel)",
+    "event_date_placeholder": "GG.AA.YYYY",
+    "request_sent_body": "Stiliste bildirim gönderildi. Talep detayınızı Kombinlerim sayfasından takip edebilirsiniz.",
+    "wardrobe_required_title": "Gardırobunuz boş",
+    "wardrobe_required_body": "Kombin talebi göndermeden önce gardırobunuza en az bir kıyafet eklemelisiniz. Stilist size en uygun kombini ancak kıyafetlerinizi görünce önerebilir.",
     "send_request": "Kombin Talebi Gönder",
     "request_sent": "Talep gönderildi!",
     "occasion": "Durum / Etkinlik",
@@ -130,11 +135,26 @@
   },
   "requests": {
     "title": "Gelen Talepler",
+    "detail_title": "Talep Detayı",
     "empty_title": "Henüz talep yok",
     "empty_description": "Müşterilerinizden gelen talepler burada görünecek",
     "accept": "Kabul Et",
+    "decline": "Reddet",
     "reject": "Reddet",
-    "from": "Müşteri"
+    "start_working": "Çalışmaya Başla",
+    "mark_complete": "Tamamlandı Olarak İşaretle",
+    "from": "Müşteri",
+    "not_found": "Talep bulunamadı"
+  },
+  "chat": {
+    "empty": "Henüz mesaj yok. İlk mesajı göndererek sohbete başlayın.",
+    "placeholder": "Mesajınızı yazın..."
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "empty_title": "Bildirim yok",
+    "empty_description": "Yeni bir etkileşim olduğunda burada görünecek",
+    "mark_all_read": "Tümünü okundu işaretle"
   },
   "profile": {
     "title": "Profil",

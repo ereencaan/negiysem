@@ -11,7 +11,7 @@ export interface CreateRequestData {
   userId: string;
   stylistId: string;
   occasion?: string;
-  budgetRange?: string;
+  eventDate?: string;
   message?: string;
 }
 
@@ -66,7 +66,7 @@ export const requestService = {
           user_id: data.userId,
           stylist_id: data.stylistId,
           occasion: data.occasion || null,
-          budget_range: data.budgetRange || null,
+          event_date: data.eventDate || null,
           message: data.message || null,
           status: 'pending',
         });
@@ -76,6 +76,28 @@ export const requestService = {
     } catch {
       return { data: null, error: 'errors.generic' };
     }
+  },
+
+  async getRequestById(requestId: string): Promise<OutfitRequestWithDetails | null> {
+    const { data, error } = await supabase
+      .from('outfit_requests')
+      .select(`
+        *,
+        user:users!outfit_requests_user_id_fkey (name),
+        stylist:users!outfit_requests_stylist_id_fkey (name)
+      `)
+      .eq('id', requestId)
+      .single();
+
+    if (error || !data) return null;
+    const item = data as Record<string, unknown>;
+    const user = item.user as Record<string, unknown> | null;
+    const stylist = item.stylist as Record<string, unknown> | null;
+    return {
+      ...(item as unknown as DbOutfitRequest),
+      userName: user?.name as string | null,
+      stylistName: stylist?.name as string | null,
+    };
   },
 
   async updateRequestStatus(

@@ -55,7 +55,10 @@ export default function OutfitsScreen() {
   };
 
   const renderRequest = ({ item }: { item: OutfitRequestWithDetails }) => (
-    <Card style={styles.card}>
+    <Card
+      style={styles.card}
+      onPress={() => router.push(`/(tabs)/request-detail?id=${item.id}`)}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.personName}>
           {activeRole === 'stylist'

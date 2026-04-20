@@ -1,10 +1,12 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
 import { useAuth } from '../../src/hooks/useAuth';
 import { RoleSwitcher } from '../../src/components/ui/RoleSwitcher';
+import { NotificationBell } from '../../src/components/ui/NotificationBell';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../../src/constants/theme';
+import { colors, spacing } from '../../src/constants/theme';
 
 export default function TabLayout() {
   const { isStylist, activeRole } = useAuth();
@@ -18,7 +20,12 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.textLight,
         headerStyle: { backgroundColor: colors.white },
         headerTintColor: colors.text,
-        headerRight: () => <RoleSwitcher />,
+        headerRight: () => (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <NotificationBell />
+            <RoleSwitcher />
+          </View>
+        ),
         headerRightContainerStyle: { paddingRight: 12 },
       }}
     >
@@ -89,6 +96,20 @@ export default function TabLayout() {
         options={{
           href: null,
           title: '',
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          href: null,
+          title: t('notifications.title'),
+        }}
+      />
+      <Tabs.Screen
+        name="request-detail"
+        options={{
+          href: null,
+          title: t('requests.detail_title'),
         }}
       />
     </Tabs>
