@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const appUser = await authService.getCurrentUser();
           setUser(appUser);
+          if (appUser?.stylistProfile) setActiveRoleState('stylist');
         } catch (err) {
           console.error('Failed to fetch user profile:', err);
           setUser(null);
@@ -45,6 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const appUser = await authService.getCurrentUser();
             setUser(appUser);
+            if (event === 'SIGNED_IN' && appUser?.stylistProfile) {
+              setActiveRoleState('stylist');
+            }
           } catch (err) {
             console.error('Failed to fetch user on auth change:', err);
           }

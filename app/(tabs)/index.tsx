@@ -278,7 +278,8 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    aspectRatio: 4 / 3,
+    height: 320,
+    resizeMode: 'cover',
     backgroundColor: colors.surface,
   },
   actionsRow: {

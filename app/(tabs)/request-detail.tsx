@@ -211,6 +211,20 @@ export default function RequestDetailScreen() {
               />
             </View>
           )}
+
+          {isStylist && (request.status === 'accepted' || request.status === 'in_progress') && (
+            <Pressable
+              onPress={() =>
+                router.push(
+                  `/(tabs)/client-wardrobe?userId=${request.user_id}&name=${encodeURIComponent(request.userName || '')}`,
+                )
+              }
+              style={styles.wardrobeLink}
+            >
+              <Ionicons name="shirt-outline" size={16} color={colors.primary} />
+              <Text style={styles.wardrobeLinkText}>{t('requests.view_client_wardrobe')}</Text>
+            </Pressable>
+          )}
         </View>
 
         <FlatList
@@ -284,6 +298,22 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     marginTop: spacing.md,
+  },
+  wardrobeLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.primarySoft,
+    borderRadius: borderRadius.full,
+  },
+  wardrobeLinkText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
   },
   messages: {
     padding: spacing.md,

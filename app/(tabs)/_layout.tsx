@@ -149,6 +149,20 @@ export default function TabLayout() {
           title: t('requests.detail_title'),
         }}
       />
+      <Tabs.Screen
+        name="edit-profile"
+        options={{
+          href: null,
+          title: t('profile.edit_profile'),
+        }}
+      />
+      <Tabs.Screen
+        name="client-wardrobe"
+        options={{
+          href: null,
+          title: t('wardrobe.client_title'),
+        }}
+      />
     </Tabs>
   );
 }

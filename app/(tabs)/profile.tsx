@@ -83,6 +83,14 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Edit profile button */}
+        <Button
+          title={t('profile.edit_profile')}
+          onPress={() => router.push('/(tabs)/edit-profile')}
+          variant="secondary"
+          style={styles.editBtn}
+        />
+
         {/* Account Info */}
         <Card style={styles.section}>
           <Text style={styles.cardTitle}>{t('profile.account_info')}</Text>
@@ -187,4 +195,5 @@ const styles = StyleSheet.create({
   promoTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.primary },
   promoDesc: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
   logoutBtn: { marginTop: spacing.sm },
+  editBtn: { marginBottom: spacing.lg },
 });

@@ -79,6 +79,9 @@
   "wardrobe": {
     "title": "Gardırobum",
     "add_item": "Kıyafet Ekle",
+    "client_title": "Müşteri Gardırobu",
+    "client_empty_title": "Müşteri henüz kıyafet eklememiş",
+    "client_empty_description": "Müşteriniz gardırobuna kıyafet eklediğinde burada görünecek",
     "empty_title": "Gardırobunuz boş",
     "empty_description": "İlk kıyafetinizi ekleyerek başlayın",
     "category": "Kategori",
@@ -150,7 +153,8 @@
     "start_working": "Çalışmaya Başla",
     "mark_complete": "Tamamlandı Olarak İşaretle",
     "from": "Müşteri",
-    "not_found": "Talep bulunamadı"
+    "not_found": "Talep bulunamadı",
+    "view_client_wardrobe": "Müşterinin Gardırobunu Gör"
   },
   "chat": {
     "empty": "Henüz mesaj yok. İlk mesajı göndererek sohbete başlayın.",
@@ -171,6 +175,7 @@
     "instagram": "Instagram",
     "instagram_placeholder": "@kullaniciadi",
     "profile_updated": "Profil güncellendi!",
+    "save_success": "Profiliniz güncellendi!",
     "stats": "İstatistikler",
     "total_outfits": "Toplam Kombin",
     "approved_outfits": "Onaylanan",
