@@ -304,15 +304,14 @@ const styles = StyleSheet.create({
   portfolioGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -spacing.xs,
   },
   portfolioItem: {
-    width: `${100 / 3}%`,
+    width: '33.3333%',
     padding: spacing.xs,
   },
   portfolioImage: {
     width: '100%',
-    aspectRatio: 0.75,
+    height: 140,
     borderRadius: borderRadius.md,
     backgroundColor: colors.surface,
   },
