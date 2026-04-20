@@ -6,6 +6,8 @@ export interface StylistListItem {
   email: string;
   profilePhoto: string | null;
   bio: string | null;
+  cvText: string | null;
+  instagramUrl: string | null;
   pricePerOutfit: number | null;
   rating: number;
   totalReviews: number;
@@ -27,6 +29,8 @@ export const stylistService = {
       .select(`
         id,
         bio,
+        cv_text,
+        instagram_url,
         price_per_outfit,
         rating,
         total_reviews,
@@ -52,6 +56,8 @@ export const stylistService = {
         email: user.email as string,
         profilePhoto: user.profile_photo as string | null,
         bio: item.bio as string | null,
+        cvText: item.cv_text as string | null,
+        instagramUrl: item.instagram_url as string | null,
         pricePerOutfit: item.price_per_outfit as number | null,
         rating: item.rating as number,
         totalReviews: item.total_reviews as number,
@@ -66,6 +72,8 @@ export const stylistService = {
       .select(`
         id,
         bio,
+        cv_text,
+        instagram_url,
         price_per_outfit,
         rating,
         total_reviews,
@@ -83,17 +91,20 @@ export const stylistService = {
 
     if (error || !data) return null;
 
-    const user = (data as Record<string, unknown>).users as Record<string, unknown>;
+    const row = data as Record<string, unknown>;
+    const user = row.users as Record<string, unknown>;
     return {
-      id: (data as Record<string, unknown>).user_id as string,
+      id: row.user_id as string,
       name: user.name as string | null,
       email: user.email as string,
       profilePhoto: user.profile_photo as string | null,
-      bio: (data as Record<string, unknown>).bio as string | null,
-      pricePerOutfit: (data as Record<string, unknown>).price_per_outfit as number | null,
-      rating: (data as Record<string, unknown>).rating as number,
-      totalReviews: (data as Record<string, unknown>).total_reviews as number,
-      isVerified: (data as Record<string, unknown>).is_verified as boolean,
+      bio: row.bio as string | null,
+      cvText: row.cv_text as string | null,
+      instagramUrl: row.instagram_url as string | null,
+      pricePerOutfit: row.price_per_outfit as number | null,
+      rating: row.rating as number,
+      totalReviews: row.total_reviews as number,
+      isVerified: row.is_verified as boolean,
     };
   },
 

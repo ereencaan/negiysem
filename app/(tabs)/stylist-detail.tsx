@@ -117,12 +117,25 @@ export default function StylistDetailScreen() {
 
         <Card style={styles.section}>
           {stylist.bio && <Text style={styles.bio}>{stylist.bio}</Text>}
+          {stylist.instagramUrl && (
+            <View style={styles.instagramRow}>
+              <Ionicons name="logo-instagram" size={16} color={colors.secondary} />
+              <Text style={styles.instagram}>{stylist.instagramUrl}</Text>
+            </View>
+          )}
           {stylist.pricePerOutfit && (
             <Text style={styles.price}>
               {stylist.pricePerOutfit}₺ {t('stylists.per_outfit')}
             </Text>
           )}
         </Card>
+
+        {stylist.cvText && (
+          <Card style={styles.section}>
+            <Text style={styles.cvTitle}>{t('stylists.cv_title')}</Text>
+            <Text style={styles.cvText}>{stylist.cvText}</Text>
+          </Card>
+        )}
 
         {portfolio.length > 0 && (
           <View style={styles.portfolioSection}>
@@ -229,6 +242,28 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: colors.secondary,
+  },
+  instagramRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: spacing.md,
+  },
+  instagram: {
+    fontSize: fontSize.sm,
+    color: colors.secondary,
+    fontWeight: fontWeight.medium,
+  },
+  cvTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  cvText: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+    lineHeight: 22,
   },
   errorText: {
     fontSize: fontSize.md,
