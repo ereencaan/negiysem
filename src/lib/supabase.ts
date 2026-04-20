@@ -29,8 +29,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 /**
  * Get full storage URL from relative path (Golden Rule #1)
+ * If the input is already an absolute URL (http/https), return as-is.
  */
 export function getStorageUrl(path: string | null): string | null {
   if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return `${supabaseUrl}/storage/v1/object/public/${path}`;
 }

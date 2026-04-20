@@ -30,10 +30,14 @@ export const feedService = {
 
     return data.map((item: Record<string, unknown>) => {
       const user = item.users as Record<string, unknown>;
+      const imagePath = item.image_path as string;
+      const imageUrl = imagePath.startsWith('http')
+        ? imagePath
+        : (getStorageUrl(`feed/${imagePath}`) ?? '');
       return {
         id: item.id as string,
         userId: item.user_id as string,
-        imageUrl: getStorageUrl(`feed/${item.image_path}`) ?? '',
+        imageUrl,
         caption: item.caption as string | null,
         likesCount: item.likes_count as number,
         createdAt: item.created_at as string,

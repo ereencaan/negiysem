@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getStorageUrl } from '../lib/supabase';
 
 export interface StylistListItem {
   id: string;
@@ -10,6 +10,14 @@ export interface StylistListItem {
   rating: number;
   totalReviews: number;
   isVerified: boolean;
+}
+
+export interface StylistPortfolioItem {
+  id: string;
+  imageUrl: string;
+  caption: string | null;
+  likesCount: number;
+  createdAt: string;
 }
 
 export const stylistService = {
@@ -87,5 +95,29 @@ export const stylistService = {
       totalReviews: (data as Record<string, unknown>).total_reviews as number,
       isVerified: (data as Record<string, unknown>).is_verified as boolean,
     };
+  },
+
+  async getStylistPortfolio(userId: string): Promise<StylistPortfolioItem[]> {
+    const { data, error } = await supabase
+      .from('feed_posts')
+      .select('id, image_path, caption, likes_count, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return [];
+
+    return data.map((item: Record<string, unknown>) => {
+      const imagePath = item.image_path as string;
+      const imageUrl = imagePath.startsWith('http')
+        ? imagePath
+        : (getStorageUrl(`feed/${imagePath}`) ?? '');
+      return {
+        id: item.id as string,
+        imageUrl,
+        caption: item.caption as string | null,
+        likesCount: item.likes_count as number,
+        createdAt: item.created_at as string,
+      };
+    });
   },
 };

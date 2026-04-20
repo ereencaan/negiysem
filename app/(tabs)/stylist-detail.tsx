@@ -2,25 +2,31 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   Alert,
   Pressable,
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
-import { stylistService, type StylistListItem } from '../../src/services/stylist.service';
+import {
+  stylistService,
+  type StylistListItem,
+  type StylistPortfolioItem,
+} from '../../src/services/stylist.service';
 import { requestService } from '../../src/services/request.service';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Badge } from '../../src/components/ui/Badge';
 import { Button } from '../../src/components/ui/Button';
 import { TextInput } from '../../src/components/ui/TextInput';
 import { Card } from '../../src/components/ui/Card';
-import { colors, spacing, fontSize, fontWeight } from '../../src/constants/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 export default function StylistDetailScreen() {
   const { t } = useTranslation();
@@ -28,6 +34,7 @@ export default function StylistDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [stylist, setStylist] = useState<StylistListItem | null>(null);
+  const [portfolio, setPortfolio] = useState<StylistPortfolioItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [occasion, setOccasion] = useState('');
@@ -36,12 +43,19 @@ export default function StylistDetailScreen() {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      stylistService.getStylistById(id).then(data => {
-        setStylist(data);
-        setIsLoading(false);
-      });
+    if (!id) {
+      setIsLoading(false);
+      return;
     }
+    Promise.all([
+      stylistService.getStylistById(id),
+      stylistService.getStylistPortfolio(id),
+    ])
+      .then(([stylistData, portfolioData]) => {
+        setStylist(stylistData);
+        setPortfolio(portfolioData);
+      })
+      .finally(() => setIsLoading(false));
   }, [id]);
 
   const sendRequest = async () => {
@@ -109,6 +123,19 @@ export default function StylistDetailScreen() {
             </Text>
           )}
         </Card>
+
+        {portfolio.length > 0 && (
+          <View style={styles.portfolioSection}>
+            <Text style={styles.portfolioTitle}>{t('stylists.portfolio')}</Text>
+            <View style={styles.portfolioGrid}>
+              {portfolio.map((item) => (
+                <View key={item.id} style={styles.portfolioItem}>
+                  <Image source={{ uri: item.imageUrl }} style={styles.portfolioImage} />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {!showRequestForm ? (
           <Button
@@ -208,5 +235,29 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.xxxl,
+  },
+  portfolioSection: {
+    marginBottom: spacing.xl,
+  },
+  portfolioTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  portfolioGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+  },
+  portfolioItem: {
+    width: `${100 / 3}%`,
+    padding: spacing.xs,
+  },
+  portfolioImage: {
+    width: '100%',
+    aspectRatio: 0.75,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
   },
 });
