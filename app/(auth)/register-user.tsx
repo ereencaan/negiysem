@@ -41,7 +41,7 @@ export default function RegisterUserScreen() {
       setFormError(t(result.error));
       setIsSubmitting(false);
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(auth)/login?registered=true');
     }
   };
 

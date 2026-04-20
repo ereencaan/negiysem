@@ -26,6 +26,7 @@
     "have_account": "Zaten hesabınız var mı?",
     "logout": "Çıkış Yap",
     "register_title": "Kayıt Ol",
+    "register_success": "Kayıt başarılı! Giriş yapabilirsiniz.",
     "bio": "Hakkınızda",
     "bio_placeholder": "Kendinizi kısaca tanıtın...",
     "cv_text": "Deneyim",

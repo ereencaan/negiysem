@@ -7,7 +7,7 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,7 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const { signIn } = useAuth();
   const router = useRouter();
+  const { registered } = useLocalSearchParams<{ registered?: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -60,6 +61,13 @@ export default function LoginScreen() {
           <Text style={styles.logo}>Ne Giysem</Text>
           <Text style={styles.subtitle}>{t('auth.welcome_back')}</Text>
         </View>
+
+        {registered === 'true' && (
+          <View style={styles.successBanner}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+            <Text style={styles.successText}>{t('auth.register_success')}</Text>
+          </View>
+        )}
 
         <FormError message={formError} />
 
@@ -161,5 +169,20 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.successSoft,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  successText: {
+    color: colors.success,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    flex: 1,
   },
 });

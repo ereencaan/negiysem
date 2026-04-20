@@ -17,6 +17,7 @@ export const colors = {
   error: '#d32f2f',
   errorLight: '#ffcdd2',
   success: '#2e7d32',
+  successSoft: '#e8f5e9',
   successLight: '#c8e6c9',
   warning: '#f9a825',
   white: '#ffffff',
