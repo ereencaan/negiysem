@@ -65,8 +65,9 @@ export default function RequestDetailScreen() {
 
   useEffect(() => {
     if (!id) return;
-    const channel = supabase
-      .channel('messages-' + id)
+
+    const channel = supabase.channel(`messages-${id}-${Date.now()}`);
+    channel
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `request_id=eq.${id}` },
@@ -75,6 +76,7 @@ export default function RequestDetailScreen() {
         },
       )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };

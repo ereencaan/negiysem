@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,44 +11,46 @@ export function NotificationBell() {
   const { user } = useAuth();
   const router = useRouter();
   const [count, setCount] = useState(0);
+  const userId = user?.id;
 
-  const refresh = useCallback(async () => {
-    if (!user) {
+  useEffect(() => {
+    if (!userId) {
       setCount(0);
       return;
     }
-    const c = await notificationService.getUnreadCount(user.id);
-    setCount(c);
-  }, [user]);
 
-  useEffect(() => {
+    let cancelled = false;
+
+    const refresh = async () => {
+      const c = await notificationService.getUnreadCount(userId);
+      if (!cancelled) setCount(c);
+    };
+
     refresh();
 
-    if (!user) return;
-
-    // Realtime subscription to notifications
-    const channel = supabase
-      .channel('notifications-' + user.id)
+    const channel = supabase.channel(`notifications-${userId}-${Date.now()}`);
+    channel
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         () => refresh(),
       )
       .subscribe();
 
-    // Also poll every 30s as a fallback
+    // Poll fallback every 30s in case realtime is down
     const interval = setInterval(refresh, 30000);
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, [user, refresh]);
+  }, [userId]);
 
   return (
     <Pressable
