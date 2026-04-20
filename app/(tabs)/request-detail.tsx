@@ -5,6 +5,7 @@ import {
   TextInput as RNTextInput,
   FlatList,
   Pressable,
+  Alert,
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
@@ -103,10 +104,19 @@ export default function RequestDetailScreen() {
   const updateStatus = async (newStatus: OutfitRequestStatus) => {
     if (!id) return;
     setIsUpdatingStatus(true);
-    await requestService.updateRequestStatus(id, newStatus);
-    const updated = await requestService.getRequestById(id);
-    setRequest(updated);
-    setIsUpdatingStatus(false);
+    try {
+      const result = await requestService.updateRequestStatus(id, newStatus);
+      if (result.error) {
+        Alert.alert(t('errors.generic'));
+      } else {
+        const updated = await requestService.getRequestById(id);
+        if (updated) setRequest(updated);
+      }
+    } catch {
+      Alert.alert(t('errors.generic'));
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   if (isLoading) {

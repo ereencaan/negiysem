@@ -1,12 +1,46 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useAuth } from '../../src/hooks/useAuth';
 import { RoleSwitcher } from '../../src/components/ui/RoleSwitcher';
 import { NotificationBell } from '../../src/components/ui/NotificationBell';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing } from '../../src/constants/theme';
+import { colors, spacing, fontSize, fontWeight } from '../../src/constants/theme';
+
+function HeaderLogo() {
+  return (
+    <View style={headerStyles.row}>
+      <View style={headerStyles.iconCircle}>
+        <Ionicons name="shirt" size={16} color={colors.primary} />
+      </View>
+      <Text style={headerStyles.title}>
+        Ne <Text style={headerStyles.accent}>Giysem</Text>
+      </Text>
+    </View>
+  );
+}
+
+const headerStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  iconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
+  accent: {
+    color: colors.primary,
+    fontStyle: 'italic',
+  },
+});
 
 export default function TabLayout() {
   const { isStylist, activeRole } = useAuth();
@@ -20,6 +54,8 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.textLight,
         headerStyle: { backgroundColor: colors.white },
         headerTintColor: colors.text,
+        headerTitle: () => <HeaderLogo />,
+        headerTitleAlign: 'left',
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             <NotificationBell />
@@ -27,6 +63,7 @@ export default function TabLayout() {
           </View>
         ),
         headerRightContainerStyle: { paddingRight: 12 },
+        headerLeftContainerStyle: { paddingLeft: 12 },
       }}
     >
       <Tabs.Screen
