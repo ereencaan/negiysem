@@ -116,7 +116,15 @@ export default function ProfileScreen() {
           </Card>
         )}
 
-        <Button title={t('auth.logout')} onPress={signOut} variant="secondary" style={styles.logoutBtn} />
+        <Button
+          title={t('auth.logout')}
+          onPress={async () => {
+            await signOut();
+            router.replace('/(auth)/welcome');
+          }}
+          variant="secondary"
+          style={styles.logoutBtn}
+        />
       </ScrollView>
     </SafeAreaView>
   );

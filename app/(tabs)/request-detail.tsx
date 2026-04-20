@@ -139,6 +139,13 @@ export default function RequestDetailScreen() {
   };
 
   const partnerName = isStylist ? request.userName : request.stylistName;
+  const partnerId = isStylist ? request.user_id : request.stylist_id;
+
+  const goToPartner = () => {
+    if (!isStylist && partnerId) {
+      router.push(`/(tabs)/stylist-detail?id=${partnerId}`);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -149,7 +156,11 @@ export default function RequestDetailScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <Text style={styles.partnerName}>{partnerName || (isStylist ? 'Kullanıcı' : 'Stilist')}</Text>
+            <Pressable onPress={goToPartner} disabled={isStylist}>
+              <Text style={[styles.partnerName, !isStylist && styles.partnerLink]}>
+                {partnerName || (isStylist ? 'Kullanıcı' : 'Stilist')}
+              </Text>
+            </Pressable>
             <Badge label={t(`outfits.status.${request.status}`)} variant={statusVariant(request.status)} />
           </View>
           {request.occasion && <Text style={styles.detailLine}>{t('stylists.occasion')}: {request.occasion}</Text>}
@@ -251,6 +262,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
     color: colors.text,
+  },
+  partnerLink: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
   detailLine: {
     fontSize: fontSize.sm,

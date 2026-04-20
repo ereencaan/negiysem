@@ -57,7 +57,12 @@
     "share": "Paylaş",
     "caption_placeholder": "Kombinini anlat...",
     "post_shared": "Paylaşıldı!",
-    "new_post": "Yeni Paylaşım"
+    "new_post": "Yeni Paylaşım",
+    "likes": "beğeni",
+    "comments": "Yorumlar",
+    "comments_count": "yorum",
+    "no_comments": "Henüz yorum yok. İlk yorumu sen yap!",
+    "add_comment": "Yorum yaz..."
   },
   "home": {
     "welcome": "Merhaba, {{name}}!",
