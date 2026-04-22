@@ -22,11 +22,12 @@ import {
 } from '../../src/services/request.service';
 import { messageService, type ChatMessage } from '../../src/services/message.service';
 import { proposalService, type OutfitProposal } from '../../src/services/proposal.service';
+import { reviewService } from '../../src/services/review.service';
 import { supabase } from '../../src/lib/supabase';
 import { Button } from '../../src/components/ui/Button';
 import { Badge } from '../../src/components/ui/Badge';
 import { Card } from '../../src/components/ui/Card';
-import { Image, Linking } from 'react-native';
+import { Image, Linking, Modal } from 'react-native';
 import type { OutfitRequestStatus } from '../../src/types/database.types';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
@@ -48,6 +49,13 @@ export default function RequestDetailScreen() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
+  // Rating state
+  const [showRating, setShowRating] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+
   const isStylist = user?.id === request?.stylist_id;
 
   const loadAll = useCallback(async () => {
@@ -63,8 +71,13 @@ export default function RequestDetailScreen() {
     setRequest(req);
     setMessages(msgs);
     setProposals(props);
+    if (req && user && req.status === 'completed' && req.user_id === user.id) {
+      const reviewed = await reviewService.hasUserReviewed(user.id, id);
+      setHasReviewed(reviewed);
+      if (!reviewed) setShowRating(true);
+    }
     setIsLoading(false);
-  }, [id]);
+  }, [id, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -108,6 +121,31 @@ export default function RequestDetailScreen() {
     }
     setIsSending(false);
   };
+
+  const submitReview = async () => {
+    if (!user || !request || rating === 0) return;
+    setIsSubmittingReview(true);
+    const result = await reviewService.createReview({
+      userId: user.id,
+      stylistId: request.stylist_id,
+      requestId: request.id,
+      rating,
+      comment: reviewComment.trim() || undefined,
+    });
+    setIsSubmittingReview(false);
+    if (result.data) {
+      setHasReviewed(true);
+      setShowRating(false);
+      Alert.alert(t('review.thank_you'));
+    } else if (result.error === 'errors.already_reviewed') {
+      setHasReviewed(true);
+      setShowRating(false);
+    } else {
+      Alert.alert(t('errors.generic'));
+    }
+  };
+
+  const isCompleted = request?.status === 'completed' || request?.status === 'cancelled';
 
   const updateStatus = async (newStatus: OutfitRequestStatus) => {
     if (!id) return;
@@ -306,24 +344,75 @@ export default function RequestDetailScreen() {
           }
         />
 
-        <View style={styles.inputRow}>
-          <RNTextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder={t('chat.placeholder')}
-            placeholderTextColor={colors.textLight}
-            multiline
-          />
-          <Pressable
-            onPress={sendMessage}
-            disabled={!input.trim() || isSending}
-            style={[styles.sendBtn, (!input.trim() || isSending) && styles.sendBtnDisabled]}
-          >
-            <Ionicons name="send" size={20} color={colors.white} />
-          </Pressable>
-        </View>
+        {isCompleted ? (
+          <View style={styles.closedBar}>
+            <Ionicons name="lock-closed-outline" size={16} color={colors.textLight} />
+            <Text style={styles.closedText}>{t('chat.closed')}</Text>
+            {!isStylist && !hasReviewed && request?.status === 'completed' && (
+              <Pressable onPress={() => setShowRating(true)} style={styles.rateBtn}>
+                <Ionicons name="star" size={14} color={colors.white} />
+                <Text style={styles.rateBtnText}>{t('review.rate')}</Text>
+              </Pressable>
+            )}
+          </View>
+        ) : (
+          <View style={styles.inputRow}>
+            <RNTextInput
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+              placeholder={t('chat.placeholder')}
+              placeholderTextColor={colors.textLight}
+              multiline
+            />
+            <Pressable
+              onPress={sendMessage}
+              disabled={!input.trim() || isSending}
+              style={[styles.sendBtn, (!input.trim() || isSending) && styles.sendBtnDisabled]}
+            >
+              <Ionicons name="send" size={20} color={colors.white} />
+            </Pressable>
+          </View>
+        )}
       </KeyboardAvoidingView>
+
+      {/* Rating Modal */}
+      <Modal visible={showRating} transparent animationType="fade" onRequestClose={() => setShowRating(false)}>
+        <Pressable style={styles.ratingOverlay} onPress={() => setShowRating(false)}>
+          <Pressable style={styles.ratingCard} onPress={e => e.stopPropagation?.()}>
+            <Text style={styles.ratingTitle}>{t('review.title')}</Text>
+            <Text style={styles.ratingSubtitle}>{request?.stylistName || 'Stilist'}</Text>
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <Pressable key={n} onPress={() => setRating(n)} hitSlop={8}>
+                  <Ionicons
+                    name={n <= rating ? 'star' : 'star-outline'}
+                    size={36}
+                    color={n <= rating ? '#f5a623' : colors.textLight}
+                  />
+                </Pressable>
+              ))}
+            </View>
+            <RNTextInput
+              style={styles.reviewInput}
+              value={reviewComment}
+              onChangeText={setReviewComment}
+              placeholder={t('review.comment_placeholder')}
+              placeholderTextColor={colors.textLight}
+              multiline
+              numberOfLines={3}
+            />
+            <Button
+              title={t('review.submit')}
+              onPress={submitReview}
+              isLoading={isSubmittingReview}
+              disabled={rating === 0}
+            />
+            <View style={{ height: spacing.sm }} />
+            <Button title={t('review.later')} onPress={() => setShowRating(false)} variant="text" />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -528,5 +617,78 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     opacity: 0.5,
+  },
+  closedBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  closedText: {
+    fontSize: fontSize.sm,
+    color: colors.textLight,
+    flex: 1,
+  },
+  rateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+  },
+  rateBtnText: {
+    color: colors.white,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+  },
+  ratingOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  ratingCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 360,
+  },
+  ratingTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  ratingSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  reviewInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: fontSize.sm,
+    color: colors.text,
+    backgroundColor: colors.surface,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: spacing.lg,
   },
 });

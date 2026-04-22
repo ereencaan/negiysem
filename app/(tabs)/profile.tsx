@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { requestService } from '../../src/services/request.service';
 import { wardrobeService } from '../../src/services/wardrobe.service';
+import { supabase } from '../../src/lib/supabase';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
@@ -13,25 +14,48 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/c
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { user, isStylist, signOut } = useAuth();
+  const { user, isStylist, activeRole, signOut } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, wardrobe: 0 });
+  const [stylistStats, setStylistStats] = useState({
+    totalClients: 0, completedJobs: 0, pendingJobs: 0,
+    totalEarnings: 0, avgRating: 0, totalReviews: 0,
+  });
 
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
-      Promise.all([
-        requestService.getUserRequests(user.id),
-        wardrobeService.getWardrobeItems(user.id),
-      ]).then(([requests, items]) => {
-        setStats({
-          total: requests.length,
-          approved: requests.filter(r => r.status === 'completed').length,
-          pending: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
-          wardrobe: items.length,
+
+      if (activeRole === 'stylist' && isStylist) {
+        Promise.all([
+          requestService.getStylistRequests(user.id),
+          supabase.from('payments').select('stylist_payout').eq('stylist_id', user.id).eq('status', 'completed'),
+        ]).then(([requests, paymentsResult]) => {
+          const payments = (paymentsResult.data ?? []) as Array<{ stylist_payout: number }>;
+          const totalEarnings = payments.reduce((sum, p) => sum + (p.stylist_payout || 0), 0);
+          setStylistStats({
+            totalClients: requests.length,
+            completedJobs: requests.filter(r => r.status === 'completed').length,
+            pendingJobs: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
+            totalEarnings,
+            avgRating: user.stylistProfile?.rating ?? 0,
+            totalReviews: user.stylistProfile?.totalReviews ?? 0,
+          });
         });
-      });
-    }, [user]),
+      } else {
+        Promise.all([
+          requestService.getUserRequests(user.id),
+          wardrobeService.getWardrobeItems(user.id),
+        ]).then(([requests, items]) => {
+          setStats({
+            total: requests.length,
+            approved: requests.filter(r => r.status === 'completed').length,
+            pending: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
+            wardrobe: items.length,
+          });
+        });
+      }
+    }, [user, activeRole, isStylist]),
   );
 
   const memberDate = user?.createdAt
@@ -52,36 +76,87 @@ export default function ProfileScreen() {
 
         {/* Stats */}
         <Text style={styles.sectionTitle}>{t('profile.stats')}</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <View style={[styles.statIconBg, { backgroundColor: '#fce4ec' }]}>
-              <Ionicons name="color-palette-outline" size={20} color={colors.primary} />
+        {activeRole === 'stylist' && isStylist ? (
+          <>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: '#fff8e1' }]}>
+                  <Ionicons name="star" size={20} color="#f5a623" />
+                </View>
+                <Text style={styles.statNumber}>{stylistStats.avgRating > 0 ? stylistStats.avgRating.toFixed(1) : '-'}</Text>
+                <Text style={styles.statLabel}>{t('profile.stylist_rating')}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: '#e3f2fd' }]}>
+                  <Ionicons name="chatbubbles-outline" size={20} color="#1565c0" />
+                </View>
+                <Text style={styles.statNumber}>{stylistStats.totalReviews}</Text>
+                <Text style={styles.statLabel}>{t('profile.reviews_count')}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: '#c8e6c9' }]}>
+                  <Ionicons name="checkmark-circle-outline" size={20} color={colors.success} />
+                </View>
+                <Text style={styles.statNumber}>{stylistStats.completedJobs}</Text>
+                <Text style={styles.statLabel}>{t('profile.completed_jobs')}</Text>
+              </View>
             </View>
-            <Text style={styles.statNumber}>{stats.total}</Text>
-            <Text style={styles.statLabel}>{t('profile.total_outfits')}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <View style={[styles.statIconBg, { backgroundColor: '#c8e6c9' }]}>
-              <Ionicons name="checkmark-circle-outline" size={20} color={colors.success} />
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: '#fce4ec' }]}>
+                  <Ionicons name="people-outline" size={20} color={colors.primary} />
+                </View>
+                <Text style={styles.statNumber}>{stylistStats.totalClients}</Text>
+                <Text style={styles.statLabel}>{t('profile.total_clients')}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: '#fff3cd' }]}>
+                  <Ionicons name="time-outline" size={20} color={colors.warning} />
+                </View>
+                <Text style={styles.statNumber}>{stylistStats.pendingJobs}</Text>
+                <Text style={styles.statLabel}>{t('profile.pending_outfits')}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconBg, { backgroundColor: '#e8f5e9' }]}>
+                  <Ionicons name="wallet-outline" size={20} color={colors.success} />
+                </View>
+                <Text style={styles.statNumber}>{stylistStats.totalEarnings > 0 ? `${stylistStats.totalEarnings}₺` : '0₺'}</Text>
+                <Text style={styles.statLabel}>{t('profile.total_earnings')}</Text>
+              </View>
             </View>
-            <Text style={styles.statNumber}>{stats.approved}</Text>
-            <Text style={styles.statLabel}>{t('profile.approved_outfits')}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <View style={[styles.statIconBg, { backgroundColor: '#fff3cd' }]}>
-              <Ionicons name="time-outline" size={20} color={colors.warning} />
+          </>
+        ) : (
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <View style={[styles.statIconBg, { backgroundColor: '#fce4ec' }]}>
+                <Ionicons name="color-palette-outline" size={20} color={colors.primary} />
+              </View>
+              <Text style={styles.statNumber}>{stats.total}</Text>
+              <Text style={styles.statLabel}>{t('profile.total_outfits')}</Text>
             </View>
-            <Text style={styles.statNumber}>{stats.pending}</Text>
-            <Text style={styles.statLabel}>{t('profile.pending_outfits')}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <View style={[styles.statIconBg, { backgroundColor: '#fce4ec' }]}>
-              <Ionicons name="shirt-outline" size={20} color={colors.primary} />
+            <View style={styles.statItem}>
+              <View style={[styles.statIconBg, { backgroundColor: '#c8e6c9' }]}>
+                <Ionicons name="checkmark-circle-outline" size={20} color={colors.success} />
+              </View>
+              <Text style={styles.statNumber}>{stats.approved}</Text>
+              <Text style={styles.statLabel}>{t('profile.approved_outfits')}</Text>
             </View>
-            <Text style={styles.statNumber}>{stats.wardrobe}</Text>
-            <Text style={styles.statLabel}>{t('profile.wardrobe_count')}</Text>
+            <View style={styles.statItem}>
+              <View style={[styles.statIconBg, { backgroundColor: '#fff3cd' }]}>
+                <Ionicons name="time-outline" size={20} color={colors.warning} />
+              </View>
+              <Text style={styles.statNumber}>{stats.pending}</Text>
+              <Text style={styles.statLabel}>{t('profile.pending_outfits')}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <View style={[styles.statIconBg, { backgroundColor: '#fce4ec' }]}>
+                <Ionicons name="shirt-outline" size={20} color={colors.primary} />
+              </View>
+              <Text style={styles.statNumber}>{stats.wardrobe}</Text>
+              <Text style={styles.statLabel}>{t('profile.wardrobe_count')}</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Edit profile button */}
         <Button

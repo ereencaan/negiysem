@@ -159,7 +159,16 @@
   },
   "chat": {
     "empty": "Henüz mesaj yok. İlk mesajı göndererek sohbete başlayın.",
-    "placeholder": "Mesajınızı yazın..."
+    "placeholder": "Mesajınızı yazın...",
+    "closed": "Bu talep tamamlandı. Mesajlaşma sona erdi."
+  },
+  "review": {
+    "title": "Stilisti Değerlendir",
+    "rate": "Değerlendir",
+    "comment_placeholder": "Deneyiminizi paylaşın... (opsiyonel)",
+    "submit": "Değerlendirmeyi Gönder",
+    "later": "Daha Sonra",
+    "thank_you": "Değerlendirmeniz için teşekkürler!"
   },
   "proposal": {
     "create": "Kombin Öner",
@@ -201,7 +210,12 @@
     "total_outfits": "Toplam Kombin",
     "approved_outfits": "Onaylanan",
     "wardrobe_count": "Gardırop",
-    "pending_outfits": "Bekleyen"
+    "pending_outfits": "Bekleyen",
+    "stylist_rating": "Puan",
+    "reviews_count": "Değerlendirme",
+    "completed_jobs": "Tamamlanan",
+    "total_clients": "Müşteri",
+    "total_earnings": "Kazanç"
   },
   "stylist": {
     "become_stylist": "Stilist Ol",
@@ -233,6 +247,7 @@
     "weak_password": "Şifre çok zayıf. Daha güçlü bir şifre seçin.",
     "generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
     "network": "İnternet bağlantınızı kontrol edin.",
-    "already_stylist": "Zaten bir stilist profiliniz var."
+    "already_stylist": "Zaten bir stilist profiliniz var.",
+    "already_reviewed": "Bu talebi zaten değerlendirdiniz."
   }
 }

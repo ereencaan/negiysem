@@ -17,6 +17,7 @@ import {
   notificationService,
   type AppNotification,
 } from '../../src/services/notification.service';
+import { followupService } from '../../src/services/followup.service';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
@@ -48,6 +49,7 @@ export default function NotificationsScreen() {
       setIsLoading(false);
       return;
     }
+    await followupService.checkAndCreateFollowUps(user.id);
     const data = await notificationService.getNotifications(user.id);
     setItems(data);
     setIsLoading(false);
