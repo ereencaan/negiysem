@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -13,10 +14,12 @@ import {
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/hooks/useAuth';
 import { profileService } from '../../src/services/profile.service';
 import { authService } from '../../src/services/auth.service';
 import { supabase } from '../../src/lib/supabase';
+import { Avatar } from '../../src/components/ui/Avatar';
 import { Button } from '../../src/components/ui/Button';
 import { TextInput } from '../../src/components/ui/TextInput';
 import { Card } from '../../src/components/ui/Card';
@@ -30,8 +33,9 @@ export default function EditProfileScreen() {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [instagramUrl, setInstagramUrl] = useState(user?.instagramUrl || '');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
-  // Card info (display only)
+  // Card info (display only - for regular users)
   const [cardHolder, setCardHolder] = useState('');
   const [cardLastFour, setCardLastFour] = useState('');
 
@@ -74,25 +78,54 @@ export default function EditProfileScreen() {
     }
   }, [user, isStylist]);
 
+  const pickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
     setIsSaving(true);
 
-    const userResult = await profileService.updateUserProfile(user.id, {
-      name,
-      phone,
-      instagramUrl,
-    });
+    // Upload profile photo if changed
+    let profilePhotoPath: string | undefined;
+    if (photoUri) {
+      try {
+        const fileName = `${user.id}/profile_${Date.now()}.jpg`;
+        const response = await fetch(photoUri);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: 'image/jpeg' });
+        const { error: uploadError } = await supabase.storage
+          .from('feed')
+          .upload(fileName, file, { contentType: 'image/jpeg', upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('feed').getPublicUrl(fileName);
+          profilePhotoPath = urlData.publicUrl;
+        }
+      } catch {}
+    }
 
-    // Save card info
-    await supabase.from('users').update({
-      card_holder_name: cardHolder || null,
-      card_last_four: cardLastFour || null,
-    }).eq('id', user.id);
+    const updateData: Record<string, unknown> = {
+      name: name || null,
+      phone: phone || null,
+      instagram_url: instagramUrl || null,
+      card_holder_name: !isStylist ? (cardHolder || null) : undefined,
+      card_last_four: !isStylist ? (cardLastFour || null) : undefined,
+    };
+    if (profilePhotoPath) updateData.profile_photo = profilePhotoPath;
 
-    let stylistResult = { data: true, error: null } as { data: boolean | null; error: string | null };
+    const { error: userError } = await supabase.from('users').update(updateData).eq('id', user.id);
+
+    let stylistError = false;
     if (isStylist) {
-      stylistResult = await profileService.updateStylistProfile(user.id, {
+      const stylistResult = await profileService.updateStylistProfile(user.id, {
         bio,
         cvText,
         instagramUrl: stylistInsta,
@@ -105,11 +138,12 @@ export default function EditProfileScreen() {
         bank_name: bankName || null,
         account_holder: accountHolder || null,
       }).eq('user_id', user.id);
+      if (stylistResult.error) stylistError = true;
     }
 
     setIsSaving(false);
 
-    if (userResult.error || stylistResult.error) {
+    if (userError || stylistError) {
       Alert.alert(t('errors.generic'));
       return;
     }
@@ -132,6 +166,19 @@ export default function EditProfileScreen() {
 
           <Text style={styles.title}>{t('profile.edit_profile')}</Text>
 
+          {/* Profile Photo */}
+          <Pressable onPress={pickPhoto} style={styles.photoSection}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+            ) : (
+              <Avatar name={user?.name} size={96} />
+            )}
+            <View style={styles.photoOverlay}>
+              <Ionicons name="camera" size={20} color={colors.white} />
+            </View>
+            <Text style={styles.changePhotoText}>{t('profile.change_photo')}</Text>
+          </Pressable>
+
           <Card style={styles.section}>
             <Text style={styles.sectionTitle}>{t('profile.account_info')}</Text>
             <TextInput label={t('auth.name')} value={name} onChangeText={setName} />
@@ -150,29 +197,31 @@ export default function EditProfileScreen() {
             />
           </Card>
 
-          {/* Payment Card */}
-          <Card style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="card-outline" size={20} color={colors.primary} />
-              <Text style={styles.sectionTitle}>{t('payment.card_info')}</Text>
-            </View>
-            <Text style={styles.sectionHelp}>{t('payment.card_help')}</Text>
-            <TextInput
-              label={t('payment.card_holder')}
-              value={cardHolder}
-              onChangeText={setCardHolder}
-              placeholder="Ad Soyad"
-              autoCapitalize="words"
-            />
-            <TextInput
-              label={t('payment.card_last_four')}
-              value={cardLastFour}
-              onChangeText={(text) => setCardLastFour(text.replace(/\D/g, '').slice(0, 4))}
-              placeholder="Son 4 hane"
-              keyboardType="numeric"
-              maxLength={4}
-            />
-          </Card>
+          {/* Payment Card - only for regular users */}
+          {!isStylist && (
+            <Card style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="card-outline" size={20} color={colors.primary} />
+                <Text style={styles.sectionTitle}>{t('payment.card_info')}</Text>
+              </View>
+              <Text style={styles.sectionHelp}>{t('payment.card_help')}</Text>
+              <TextInput
+                label={t('payment.card_holder')}
+                value={cardHolder}
+                onChangeText={setCardHolder}
+                placeholder="Ad Soyad"
+                autoCapitalize="words"
+              />
+              <TextInput
+                label={t('payment.card_last_four')}
+                value={cardLastFour}
+                onChangeText={(text) => setCardLastFour(text.replace(/\D/g, '').slice(0, 4))}
+                placeholder="Son 4 hane"
+                keyboardType="numeric"
+                maxLength={4}
+              />
+            </Card>
+          )}
 
           {isStylist && (
             <>
@@ -270,6 +319,37 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     color: colors.text,
     marginBottom: spacing.lg,
+  },
+  photoSection: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+    position: 'relative',
+  },
+  photoPreview: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.surface,
+  },
+  photoOverlay: {
+    position: 'absolute',
+    bottom: 20,
+    right: '50%',
+    marginRight: -48,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
+  changePhotoText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: fontWeight.medium,
+    marginTop: spacing.sm,
   },
   section: {
     marginBottom: spacing.lg,

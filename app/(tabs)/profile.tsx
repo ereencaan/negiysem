@@ -21,12 +21,25 @@ export default function ProfileScreen() {
     totalClients: 0, completedJobs: 0, pendingJobs: 0,
     totalEarnings: 0, avgRating: 0, totalReviews: 0,
   });
+  const [bankInfo, setBankInfo] = useState({ iban: '', bankName: '', accountHolder: '' });
 
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
 
       if (activeRole === 'stylist' && isStylist) {
+        supabase.from('stylist_profiles').select('iban, bank_name, account_holder').eq('user_id', user.id).single()
+          .then(({ data }) => {
+            if (data) {
+              const d = data as { iban: string | null; bank_name: string | null; account_holder: string | null };
+              setBankInfo({
+                iban: d.iban || '',
+                bankName: d.bank_name || '',
+                accountHolder: d.account_holder || '',
+              });
+            }
+          });
+
         Promise.all([
           requestService.getStylistRequests(user.id),
           supabase.from('payments').select('stylist_payout').eq('stylist_id', user.id).eq('status', 'completed'),
@@ -178,15 +191,33 @@ export default function ProfileScreen() {
 
         {/* Stylist Profile */}
         {isStylist && user?.stylistProfile && (
-          <Card style={styles.section}>
-            <Text style={styles.cardTitle}>{t('profile.stylist_profile')}</Text>
-            <InfoRow label={t('auth.bio')} value={user.stylistProfile.bio || '-'} />
-            <InfoRow
-              label={t('auth.price_per_outfit')}
-              value={user.stylistProfile.pricePerOutfit ? `${user.stylistProfile.pricePerOutfit}₺` : '-'}
-            />
-            <InfoRow label={t('auth.instagram_url')} value={user.stylistProfile.instagramUrl || '-'} last />
-          </Card>
+          <>
+            <Card style={styles.section}>
+              <Text style={styles.cardTitle}>{t('profile.stylist_profile')}</Text>
+              <InfoRow label={t('auth.bio')} value={user.stylistProfile.bio || '-'} />
+              <InfoRow
+                label={t('auth.price_per_outfit')}
+                value={user.stylistProfile.pricePerOutfit ? `${user.stylistProfile.pricePerOutfit}₺` : '-'}
+              />
+              <InfoRow label={t('auth.instagram_url')} value={user.stylistProfile.instagramUrl || '-'} last />
+            </Card>
+
+            <Card style={styles.section}>
+              <View style={styles.bankHeader}>
+                <Ionicons name="wallet-outline" size={18} color={colors.success} />
+                <Text style={styles.cardTitle}>{t('payment.bank_info')}</Text>
+              </View>
+              {bankInfo.iban ? (
+                <>
+                  <InfoRow label={t('payment.account_holder')} value={bankInfo.accountHolder || '-'} />
+                  <InfoRow label={t('payment.iban')} value={bankInfo.iban} />
+                  <InfoRow label={t('payment.bank_name')} value={bankInfo.bankName || '-'} last />
+                </>
+              ) : (
+                <Text style={styles.bankEmpty}>{t('payment.no_bank_info')}</Text>
+              )}
+            </Card>
+          </>
         )}
 
         {!isStylist && (
@@ -271,4 +302,17 @@ const styles = StyleSheet.create({
   promoDesc: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
   logoutBtn: { marginTop: spacing.sm },
   editBtn: { marginBottom: spacing.lg },
+  bankHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  bankEmpty: {
+    fontSize: fontSize.sm,
+    color: colors.textLight,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: spacing.md,
+  },
 });
