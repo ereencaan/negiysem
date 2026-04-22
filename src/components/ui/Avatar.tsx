@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
-import { colors, fontWeight } from '../../constants/theme';
+import { colors, fontWeight, shadow } from '../../constants/theme';
 
 interface AvatarProps {
   uri?: string | null;
@@ -13,18 +13,41 @@ export function Avatar({ uri, name, size = 48 }: AvatarProps) {
     ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
+  const borderW = size > 60 ? 3 : 2;
+
   if (uri) {
     return (
       <Image
         source={{ uri }}
-        style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
+        style={[
+          styles.image,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: borderW,
+            borderColor: colors.primarySoft,
+          },
+        ]}
       />
     );
   }
 
   return (
-    <View style={[styles.placeholder, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.initials, { fontSize: size * 0.36 }]}>{initials}</Text>
+    <View
+      style={[
+        styles.placeholder,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: borderW,
+          borderColor: colors.primarySoft,
+        },
+        shadow.sm,
+      ]}
+    >
+      <Text style={[styles.initials, { fontSize: size * 0.34 }]}>{initials}</Text>
     </View>
   );
 }
@@ -40,6 +63,6 @@ const styles = StyleSheet.create({
   },
   initials: {
     color: colors.primary,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
   },
 });

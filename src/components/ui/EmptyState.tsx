@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from './Button';
-import { colors, spacing, fontSize, fontWeight } from '../../constants/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
 
 interface EmptyStateProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -15,12 +15,14 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={64} color={colors.textLight} />
+      <View style={styles.iconCircle}>
+        <Ionicons name={icon} size={40} color={colors.primary} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
       {actionLabel && onAction && (
         <View style={styles.action}>
-          <Button title={actionLabel} onPress={onAction} variant="primary" />
+          <Button title={actionLabel} onPress={onAction} />
         </View>
       )}
     </View>
@@ -34,11 +36,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.xxl,
   },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   title: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
     color: colors.text,
-    marginTop: spacing.lg,
+    marginTop: spacing.sm,
     textAlign: 'center',
   },
   description: {
@@ -46,10 +57,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.sm,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
+    maxWidth: 280,
   },
   action: {
     marginTop: spacing.xl,
     width: '100%',
+    maxWidth: 280,
   },
 });

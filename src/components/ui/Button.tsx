@@ -6,7 +6,7 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
-import { colors, spacing, fontSize, borderRadius, fontWeight } from '../../constants/theme';
+import { colors, spacing, fontSize, borderRadius, fontWeight, shadow } from '../../constants/theme';
 
 interface ButtonProps {
   title: string;
@@ -15,13 +15,8 @@ interface ButtonProps {
   isLoading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
+  size?: 'sm' | 'md';
 }
-
-const variantStyles = {
-  primary: { bg: colors.primary, bgPressed: colors.primaryLight, textColor: colors.white },
-  secondary: { bg: colors.white, bgPressed: colors.primarySoft, textColor: colors.primary },
-  text: { bg: 'transparent', bgPressed: 'transparent', textColor: colors.primary },
-} as const;
 
 export function Button({
   title,
@@ -30,9 +25,9 @@ export function Button({
   isLoading = false,
   disabled = false,
   style,
+  size = 'md',
 }: ButtonProps) {
   const isDisabled = disabled || isLoading;
-  const v = variantStyles[variant];
 
   return (
     <Pressable
@@ -40,8 +35,12 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        variant === 'secondary' && styles.secondaryBorder,
-        { backgroundColor: pressed && !isDisabled ? v.bgPressed : v.bg },
+        size === 'sm' && styles.baseSm,
+        variant === 'primary' && styles.primary,
+        variant === 'primary' && pressed && styles.primaryPressed,
+        variant === 'secondary' && styles.secondary,
+        variant === 'secondary' && pressed && styles.secondaryPressed,
+        variant === 'text' && styles.text,
         isDisabled && styles.disabled,
         style,
       ]}
@@ -52,7 +51,15 @@ export function Button({
           size="small"
         />
       ) : (
-        <Text style={[styles.buttonText, { color: v.textColor }]}>
+        <Text
+          style={[
+            styles.buttonText,
+            size === 'sm' && styles.buttonTextSm,
+            variant === 'primary' && styles.primaryText,
+            variant === 'secondary' && styles.secondaryText,
+            variant === 'text' && styles.textText,
+          ]}
+        >
           {title}
         </Text>
       )}
@@ -62,16 +69,38 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: spacing.md + 2,
+    paddingVertical: 14,
     paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    minHeight: 50,
   },
-  secondaryBorder: {
+  baseSm: {
+    paddingVertical: 10,
+    minHeight: 40,
+  },
+  primary: {
+    backgroundColor: colors.primary,
+    ...shadow.sm,
+  },
+  primaryPressed: {
+    backgroundColor: colors.primaryLight,
+    transform: [{ scale: 0.98 }],
+  },
+  secondary: {
+    backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: colors.primary,
+  },
+  secondaryPressed: {
+    backgroundColor: colors.primarySoft,
+    transform: [{ scale: 0.98 }],
+  },
+  text: {
+    backgroundColor: 'transparent',
+    minHeight: 36,
+    paddingVertical: 8,
   },
   disabled: {
     opacity: 0.5,
@@ -80,5 +109,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: fontWeight.semibold,
     letterSpacing: 0.3,
+  },
+  buttonTextSm: {
+    fontSize: fontSize.sm,
+  },
+  primaryText: {
+    color: colors.white,
+  },
+  secondaryText: {
+    color: colors.primary,
+  },
+  textText: {
+    color: colors.primary,
   },
 });

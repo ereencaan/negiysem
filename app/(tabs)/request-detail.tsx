@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -66,9 +66,11 @@ export default function RequestDetailScreen() {
     setIsLoading(false);
   }, [id]);
 
-  useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+  useFocusEffect(
+    useCallback(() => {
+      loadAll();
+    }, [loadAll]),
+  );
 
   useEffect(() => {
     if (!id) return;

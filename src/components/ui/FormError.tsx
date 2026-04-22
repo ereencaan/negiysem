@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize, borderRadius } from '../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
 
 interface FormErrorProps {
   message?: string | null;
@@ -11,6 +12,7 @@ export function FormError({ message }: FormErrorProps) {
 
   return (
     <View style={styles.container}>
+      <Ionicons name="alert-circle" size={18} color={colors.error} />
       <Text style={styles.text}>{message}</Text>
     </View>
   );
@@ -18,14 +20,20 @@ export function FormError({ message }: FormErrorProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.errorLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: '#fef2f2',
     padding: spacing.md,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.md,
     marginBottom: spacing.lg,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
   },
   text: {
+    flex: 1,
     color: colors.error,
     fontSize: fontSize.sm,
-    textAlign: 'center',
+    fontWeight: fontWeight.medium,
   },
 });
