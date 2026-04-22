@@ -127,6 +127,7 @@ export default function BecomeStylistScreen() {
             />
           )}
         />
+        <Text style={styles.commissionNote}>{t('payment.commission_note')}</Text>
 
         <Button
           title={t('stylist.become_stylist')}
@@ -156,5 +157,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.xxl,
     lineHeight: 22,
+  },
+  commissionNote: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.lg,
+    fontStyle: 'italic',
   },
 });

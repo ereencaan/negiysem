@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { profileService } from '../../src/services/profile.service';
 import { authService } from '../../src/services/auth.service';
+import { supabase } from '../../src/lib/supabase';
 import { Button } from '../../src/components/ui/Button';
 import { TextInput } from '../../src/components/ui/TextInput';
 import { Card } from '../../src/components/ui/Card';
@@ -30,6 +31,11 @@ export default function EditProfileScreen() {
   const [phone, setPhone] = useState(user?.phone || '');
   const [instagramUrl, setInstagramUrl] = useState(user?.instagramUrl || '');
 
+  // Card info (display only)
+  const [cardHolder, setCardHolder] = useState('');
+  const [cardLastFour, setCardLastFour] = useState('');
+
+  // Stylist fields
   const [bio, setBio] = useState(user?.stylistProfile?.bio || '');
   const [cvText, setCvText] = useState(user?.stylistProfile?.cvText || '');
   const [stylistInsta, setStylistInsta] = useState(user?.stylistProfile?.instagramUrl || '');
@@ -38,8 +44,35 @@ export default function EditProfileScreen() {
       ? String(user.stylistProfile.pricePerOutfit)
       : '',
   );
+  const [iban, setIban] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [accountHolder, setAccountHolder] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
+
+  // Load existing card/IBAN on mount
+  React.useEffect(() => {
+    if (!user) return;
+    supabase.from('users').select('card_last_four, card_holder_name').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          const d = data as { card_last_four: string | null; card_holder_name: string | null };
+          if (d.card_last_four) setCardLastFour(d.card_last_four);
+          if (d.card_holder_name) setCardHolder(d.card_holder_name);
+        }
+      });
+    if (isStylist) {
+      supabase.from('stylist_profiles').select('iban, bank_name, account_holder').eq('user_id', user.id).single()
+        .then(({ data }) => {
+          if (data) {
+            const d = data as { iban: string | null; bank_name: string | null; account_holder: string | null };
+            if (d.iban) setIban(d.iban);
+            if (d.bank_name) setBankName(d.bank_name);
+            if (d.account_holder) setAccountHolder(d.account_holder);
+          }
+        });
+    }
+  }, [user, isStylist]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -51,6 +84,12 @@ export default function EditProfileScreen() {
       instagramUrl,
     });
 
+    // Save card info
+    await supabase.from('users').update({
+      card_holder_name: cardHolder || null,
+      card_last_four: cardLastFour || null,
+    }).eq('id', user.id);
+
     let stylistResult = { data: true, error: null } as { data: boolean | null; error: string | null };
     if (isStylist) {
       stylistResult = await profileService.updateStylistProfile(user.id, {
@@ -59,6 +98,13 @@ export default function EditProfileScreen() {
         instagramUrl: stylistInsta,
         pricePerOutfit: price ? Number(price) : undefined,
       });
+
+      // Save IBAN
+      await supabase.from('stylist_profiles').update({
+        iban: iban || null,
+        bank_name: bankName || null,
+        account_holder: accountHolder || null,
+      }).eq('user_id', user.id);
     }
 
     setIsSaving(false);
@@ -68,7 +114,6 @@ export default function EditProfileScreen() {
       return;
     }
 
-    // Re-fetch user so context has latest
     await authService.getCurrentUser();
     Alert.alert(t('profile.save_success'));
     router.back();
@@ -105,37 +150,92 @@ export default function EditProfileScreen() {
             />
           </Card>
 
+          {/* Payment Card */}
+          <Card style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="card-outline" size={20} color={colors.primary} />
+              <Text style={styles.sectionTitle}>{t('payment.card_info')}</Text>
+            </View>
+            <Text style={styles.sectionHelp}>{t('payment.card_help')}</Text>
+            <TextInput
+              label={t('payment.card_holder')}
+              value={cardHolder}
+              onChangeText={setCardHolder}
+              placeholder="Ad Soyad"
+              autoCapitalize="words"
+            />
+            <TextInput
+              label={t('payment.card_last_four')}
+              value={cardLastFour}
+              onChangeText={(text) => setCardLastFour(text.replace(/\D/g, '').slice(0, 4))}
+              placeholder="Son 4 hane"
+              keyboardType="numeric"
+              maxLength={4}
+            />
+          </Card>
+
           {isStylist && (
-            <Card style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('profile.stylist_profile')}</Text>
-              <TextInput
-                label={t('auth.bio')}
-                value={bio}
-                onChangeText={setBio}
-                multiline
-                numberOfLines={3}
-              />
-              <TextInput
-                label={t('auth.cv_text')}
-                value={cvText}
-                onChangeText={setCvText}
-                multiline
-                numberOfLines={6}
-              />
-              <TextInput
-                label={t('auth.instagram_url')}
-                value={stylistInsta}
-                onChangeText={setStylistInsta}
-                placeholder="@stilisthesap"
-                autoCapitalize="none"
-              />
-              <TextInput
-                label={t('auth.price_per_outfit')}
-                value={price}
-                onChangeText={setPrice}
-                keyboardType="numeric"
-              />
-            </Card>
+            <>
+              <Card style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('profile.stylist_profile')}</Text>
+                <TextInput
+                  label={t('auth.bio')}
+                  value={bio}
+                  onChangeText={setBio}
+                  multiline
+                  numberOfLines={3}
+                />
+                <TextInput
+                  label={t('auth.cv_text')}
+                  value={cvText}
+                  onChangeText={setCvText}
+                  multiline
+                  numberOfLines={6}
+                />
+                <TextInput
+                  label={t('auth.instagram_url')}
+                  value={stylistInsta}
+                  onChangeText={setStylistInsta}
+                  placeholder="@stilisthesap"
+                  autoCapitalize="none"
+                />
+                <TextInput
+                  label={t('auth.price_per_outfit')}
+                  value={price}
+                  onChangeText={setPrice}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.commissionNote}>{t('payment.commission_note')}</Text>
+              </Card>
+
+              <Card style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="wallet-outline" size={20} color={colors.success} />
+                  <Text style={styles.sectionTitle}>{t('payment.bank_info')}</Text>
+                </View>
+                <Text style={styles.sectionHelp}>{t('payment.bank_help')}</Text>
+                <TextInput
+                  label={t('payment.account_holder')}
+                  value={accountHolder}
+                  onChangeText={setAccountHolder}
+                  placeholder="Ad Soyad"
+                  autoCapitalize="words"
+                />
+                <TextInput
+                  label={t('payment.iban')}
+                  value={iban}
+                  onChangeText={setIban}
+                  placeholder="TR00 0000 0000 0000 0000 0000 00"
+                  autoCapitalize="characters"
+                />
+                <TextInput
+                  label={t('payment.bank_name')}
+                  value={bankName}
+                  onChangeText={setBankName}
+                  placeholder="Banka adı"
+                />
+              </Card>
+            </>
           )}
 
           <Button
@@ -174,10 +274,28 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
   sectionTitle: {
     fontSize: fontSize.md,
     fontWeight: fontWeight.semibold,
     color: colors.text,
+  },
+  sectionHelp: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
     marginBottom: spacing.md,
+    lineHeight: 16,
+  },
+  commissionNote: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.sm,
+    fontStyle: 'italic',
   },
 });

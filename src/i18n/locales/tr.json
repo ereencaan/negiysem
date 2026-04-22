@@ -170,6 +170,23 @@
     "later": "Daha Sonra",
     "thank_you": "Değerlendirmeniz için teşekkürler!"
   },
+  "payment": {
+    "commission_note": "Her kombin tamamlandığında, belirlediğiniz ücretten %10 platform komisyonu kesilir.",
+    "card_info": "Ödeme Kartı",
+    "card_help": "Kombin talebi oluştururken kullanılacak kart. Gerçek kart bilgileriniz güvenli ödeme altyapısı (iyzico) üzerinden işlenir.",
+    "card_holder": "Kart Sahibi",
+    "card_last_four": "Kart Son 4 Hane",
+    "bank_info": "Banka Bilgileri",
+    "bank_help": "Kazançlarınızın aktarılacağı banka hesabı. Bu bilgiler gizli tutulur.",
+    "account_holder": "Hesap Sahibi",
+    "iban": "IBAN",
+    "bank_name": "Banka Adı",
+    "history_title": "Ödeme Geçmişi",
+    "no_payments": "Henüz ödeme kaydı yok",
+    "earned": "Kazanılan",
+    "paid": "Ödenen",
+    "commission": "Komisyon"
+  },
   "proposal": {
     "create": "Kombin Öner",
     "title": "Kombin Başlığı",
