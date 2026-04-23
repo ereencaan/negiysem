@@ -15,7 +15,7 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.topSection}>
-          <Logo size="large" showText showSubtitle subtitle={t('auth.welcome_subtitle')} />
+          <Logo size="large" showText />
         </View>
 
         <View style={styles.features}>

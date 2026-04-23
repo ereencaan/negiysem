@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Modal, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
 
@@ -11,6 +11,12 @@ interface LogoProps {
   showInfo?: boolean;
 }
 
+const sizeMap = {
+  small: { mark: 44, wordmark: { w: 150, h: 64 }, info: 20, subtitle: 11 },
+  medium: { mark: 72, wordmark: { w: 230, h: 96 }, info: 24, subtitle: 13 },
+  large: { mark: 104, wordmark: { w: 320, h: 136 }, info: 30, subtitle: 14 },
+};
+
 export function Logo({
   size = 'medium',
   showText = true,
@@ -19,54 +25,37 @@ export function Logo({
   showInfo = true,
 }: LogoProps) {
   const [infoVisible, setInfoVisible] = useState(false);
-  const sizeMap = {
-    small: { container: 48, icon: 22, mainIcon: 20, sparkle: 10, badge: 18, font: fontSize.xl },
-    medium: { container: 72, icon: 32, mainIcon: 30, sparkle: 14, badge: 26, font: 36 },
-    large: { container: 104, icon: 44, mainIcon: 42, sparkle: 20, badge: 36, font: 48 },
-  };
   const s = sizeMap[size];
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.outerRing, { width: s.container, height: s.container, borderRadius: s.container / 2 }]}>
-        <View style={[styles.innerCircle, { width: s.container - 12, height: s.container - 12, borderRadius: (s.container - 12) / 2 }]}>
-          <Ionicons name="shirt" size={s.mainIcon} color={colors.primary} />
-          <View
-            style={[
-              styles.sparkleBadge,
-              {
-                width: s.badge,
-                height: s.badge,
-                borderRadius: s.badge / 2,
-                top: -2,
-                right: -2,
-              },
-            ]}
+      <View style={styles.lockupRow}>
+        {showText ? (
+          <Image
+            source={require('../../../assets/images/logo-mark.png')}
+            style={{ width: s.wordmark.w, height: s.wordmark.h }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Image
+            source={require('../../../assets/images/icon.png')}
+            style={{ width: s.mark, height: s.mark }}
+            resizeMode="contain"
+          />
+        )}
+        {showInfo && (
+          <Pressable
+            onPress={() => setInfoVisible(true)}
+            hitSlop={10}
+            style={styles.infoBtn}
           >
-            <Ionicons name="sparkles" size={s.sparkle} color={colors.white} />
-          </View>
-        </View>
+            <Ionicons name="help-circle-outline" size={s.info} color={colors.primary} />
+          </Pressable>
+        )}
       </View>
 
-      {showText && (
-        <View style={styles.titleRow}>
-          <Text style={[styles.logoText, { fontSize: s.font }]}>
-            Ne <Text style={styles.logoAccent}>Giysem</Text>
-          </Text>
-          {showInfo && (
-            <Pressable
-              onPress={() => setInfoVisible(true)}
-              hitSlop={10}
-              style={styles.infoBtn}
-            >
-              <Ionicons name="help-circle-outline" size={s.font * 0.6} color={colors.primary} />
-            </Pressable>
-          )}
-        </View>
-      )}
-
       {showSubtitle && subtitle && (
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.subtitle, { fontSize: s.subtitle }]}>{subtitle}</Text>
       )}
 
       <Modal
@@ -115,57 +104,20 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
   },
-  outerRing: {
-    backgroundColor: colors.primarySoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  innerCircle: {
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  sparkleBadge: {
-    position: 'absolute',
-    backgroundColor: colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.white,
-  },
-  logoText: {
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginBottom: spacing.xs,
-  },
-  logoAccent: {
-    color: colors.primary,
-    fontStyle: 'italic',
-  },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    fontWeight: fontWeight.medium,
-  },
-  titleRow: {
+  lockupRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
   infoBtn: {
     padding: 2,
+  },
+  subtitle: {
+    color: colors.textSecondary,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    fontWeight: fontWeight.medium,
+    marginTop: spacing.sm,
   },
   modalOverlay: {
     flex: 1,
