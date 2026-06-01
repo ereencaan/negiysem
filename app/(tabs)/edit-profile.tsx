@@ -35,10 +35,6 @@ export default function EditProfileScreen() {
   const [instagramUrl, setInstagramUrl] = useState(user?.instagramUrl || '');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
-  // Card info (display only - for regular users)
-  const [cardHolder, setCardHolder] = useState('');
-  const [cardLastFour, setCardLastFour] = useState('');
-
   // Stylist fields
   const [bio, setBio] = useState(user?.stylistProfile?.bio || '');
   const [cvText, setCvText] = useState(user?.stylistProfile?.cvText || '');
@@ -57,14 +53,6 @@ export default function EditProfileScreen() {
   // Load existing card/IBAN on mount
   React.useEffect(() => {
     if (!user) return;
-    supabase.from('users').select('card_last_four, card_holder_name').eq('id', user.id).single()
-      .then(({ data }) => {
-        if (data) {
-          const d = data as { card_last_four: string | null; card_holder_name: string | null };
-          if (d.card_last_four) setCardLastFour(d.card_last_four);
-          if (d.card_holder_name) setCardHolder(d.card_holder_name);
-        }
-      });
     if (isStylist) {
       supabase.from('stylist_profiles').select('iban, bank_name, account_holder').eq('user_id', user.id).single()
         .then(({ data }) => {
@@ -116,8 +104,6 @@ export default function EditProfileScreen() {
       name: name || null,
       phone: phone || null,
       instagram_url: instagramUrl || null,
-      card_holder_name: !isStylist ? (cardHolder || null) : undefined,
-      card_last_four: !isStylist ? (cardLastFour || null) : undefined,
     };
     if (profilePhotoPath) updateData.profile_photo = profilePhotoPath;
 
@@ -196,32 +182,6 @@ export default function EditProfileScreen() {
               autoCapitalize="none"
             />
           </Card>
-
-          {/* Payment Card - only for regular users */}
-          {!isStylist && (
-            <Card style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="card-outline" size={20} color={colors.primary} />
-                <Text style={styles.sectionTitle}>{t('payment.card_info')}</Text>
-              </View>
-              <Text style={styles.sectionHelp}>{t('payment.card_help')}</Text>
-              <TextInput
-                label={t('payment.card_holder')}
-                value={cardHolder}
-                onChangeText={setCardHolder}
-                placeholder="Ad Soyad"
-                autoCapitalize="words"
-              />
-              <TextInput
-                label={t('payment.card_last_four')}
-                value={cardLastFour}
-                onChangeText={(text) => setCardLastFour(text.replace(/\D/g, '').slice(0, 4))}
-                placeholder="Son 4 hane"
-                keyboardType="numeric"
-                maxLength={4}
-              />
-            </Card>
-          )}
 
           {isStylist && (
             <>

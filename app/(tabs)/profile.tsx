@@ -28,33 +28,32 @@ export default function ProfileScreen() {
       if (!user) return;
 
       if (activeRole === 'stylist' && isStylist) {
-        supabase.from('stylist_profiles').select('iban, bank_name, account_holder').eq('user_id', user.id).single()
+        supabase.from('stylist_profiles').select('iban, bank_name, account_holder, price_per_outfit').eq('user_id', user.id).single()
           .then(({ data }) => {
             if (data) {
-              const d = data as { iban: string | null; bank_name: string | null; account_holder: string | null };
+              const d = data as { iban: string | null; bank_name: string | null; account_holder: string | null; price_per_outfit: number | null };
               setBankInfo({
                 iban: d.iban || '',
                 bankName: d.bank_name || '',
                 accountHolder: d.account_holder || '',
               });
+
+              // Calculate earnings from completed requests * price * 0.9
+              requestService.getStylistRequests(user.id).then(requests => {
+                const completed = requests.filter(r => r.status === 'completed').length;
+                const pricePerOutfit = d.price_per_outfit ?? 0;
+                const totalEarnings = Math.round(completed * pricePerOutfit * 0.9 * 100) / 100;
+                setStylistStats({
+                  totalClients: requests.length,
+                  completedJobs: completed,
+                  pendingJobs: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
+                  totalEarnings,
+                  avgRating: user.stylistProfile?.rating ?? 0,
+                  totalReviews: user.stylistProfile?.totalReviews ?? 0,
+                });
+              });
             }
           });
-
-        Promise.all([
-          requestService.getStylistRequests(user.id),
-          supabase.from('payments').select('stylist_payout').eq('stylist_id', user.id).eq('status', 'completed'),
-        ]).then(([requests, paymentsResult]) => {
-          const payments = (paymentsResult.data ?? []) as Array<{ stylist_payout: number }>;
-          const totalEarnings = payments.reduce((sum, p) => sum + (p.stylist_payout || 0), 0);
-          setStylistStats({
-            totalClients: requests.length,
-            completedJobs: requests.filter(r => r.status === 'completed').length,
-            pendingJobs: requests.filter(r => ['pending', 'accepted', 'in_progress'].includes(r.status)).length,
-            totalEarnings,
-            avgRating: user.stylistProfile?.rating ?? 0,
-            totalReviews: user.stylistProfile?.totalReviews ?? 0,
-          });
-        });
       } else {
         Promise.all([
           requestService.getUserRequests(user.id),
