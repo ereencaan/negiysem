@@ -22,8 +22,8 @@ import { EmptyState } from '../../src/components/ui/EmptyState';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GRID_GAP = 2;
-const TILE_SIZE = (SCREEN_WIDTH - GRID_GAP * 2) / 3;
+const GRID_GAP = 4;
+const TILE_SIZE = (SCREEN_WIDTH - GRID_GAP * 4) / 3;
 
 interface PublicUser {
   id: string;
@@ -104,12 +104,16 @@ export default function UserProfileScreen() {
   const renderTile = ({ item }: { item: FeedPost }) => (
     <Pressable style={styles.tile}>
       <Image source={{ uri: item.imageUrl }} style={styles.tileImage} />
-      {item.likesCount > 0 && (
-        <View style={styles.tileOverlay}>
+      <View style={styles.tileOverlay}>
+        <View style={styles.tileStatRow}>
           <Ionicons name="heart" size={12} color={colors.white} />
           <Text style={styles.tileCount}>{item.likesCount}</Text>
         </View>
-      )}
+        <View style={styles.tileStatRow}>
+          <Ionicons name="chatbubble" size={11} color={colors.white} />
+          <Text style={styles.tileCount}>{item.commentsCount}</Text>
+        </View>
+      </View>
     </Pressable>
   );
 
@@ -239,20 +243,31 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   gridHeaderText: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.text },
-  gridRow: { gap: GRID_GAP },
-  tile: { width: TILE_SIZE, height: TILE_SIZE, position: 'relative' },
+  gridRow: { gap: GRID_GAP, paddingHorizontal: GRID_GAP },
+  tile: {
+    width: TILE_SIZE,
+    height: TILE_SIZE,
+    borderRadius: borderRadius.sm,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: GRID_GAP,
+  },
   tileImage: { width: '100%', height: '100%', backgroundColor: colors.surface },
   tileOverlay: {
     position: 'absolute',
-    bottom: 4,
-    right: 4,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  tileStatRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
+    gap: 3,
   },
   tileCount: { fontSize: 10, color: colors.white, fontWeight: fontWeight.semibold },
 });
