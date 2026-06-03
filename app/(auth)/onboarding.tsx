@@ -2,12 +2,13 @@ import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   Pressable,
   Dimensions,
   StyleSheet,
   SafeAreaView,
-  type ViewToken,
+  type NativeSyntheticEvent,
+  type NativeScrollEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +26,6 @@ interface Slide {
   iconColor: string;
   title: string;
   description: string;
-  highlight?: string;
 }
 
 const slides: Slide[] = [
@@ -36,7 +36,6 @@ const slides: Slide[] = [
     iconColor: colors.primary,
     title: 'Gardırobunu Dijitalleştir',
     description: 'Dolabındaki kıyafetleri fotoğrafla, kategorize et. Tüm gardırobun cebinde.',
-    highlight: 'Fotoğrafla, kategorize et',
   },
   {
     id: '2',
@@ -45,7 +44,6 @@ const slides: Slide[] = [
     iconColor: '#1565c0',
     title: 'Profesyonel Stilist Bul',
     description: 'Onlarca onaylı stilist arasından tarzına uygun olanı seç. Fiyatları, puanları ve portfolyolarını incele.',
-    highlight: 'Tarzına uygun stilist',
   },
   {
     id: '3',
@@ -54,7 +52,6 @@ const slides: Slide[] = [
     iconColor: '#f5a623',
     title: 'Kişisel Kombin Al',
     description: 'Stilistin senin kıyafetlerinden kombin önerir. Eksik parça varsa alışveriş linki ekler.',
-    highlight: 'Senin kıyafetlerinden',
   },
   {
     id: '4',
@@ -63,30 +60,27 @@ const slides: Slide[] = [
     iconColor: '#2e7d32',
     title: 'Kombin Yap, Para Kazan',
     description: 'Sen de stilist ol! Diğer kullanıcılara kombin öner ve her kombinden kazanç elde et.',
-    highlight: 'Stilist ol, kazan',
   },
 ];
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const flatListRef = useRef<FlatList<Slide>>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setCurrentIndex(viewableItems[0].index);
-      }
-    },
-  ).current;
-
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const x = e.nativeEvent.contentOffset.x;
+    const index = Math.round(x / width);
+    if (index !== currentIndex && index >= 0 && index < slides.length) {
+      setCurrentIndex(index);
+    }
+  };
 
   const goNext = () => {
     if (currentIndex < slides.length - 1) {
-      const nextIndex = currentIndex + 1;
-      flatListRef.current?.scrollToOffset({ offset: nextIndex * width, animated: true });
-      setCurrentIndex(nextIndex);
+      const next = currentIndex + 1;
+      scrollRef.current?.scrollTo({ x: next * width, animated: true });
+      setCurrentIndex(next);
     } else {
       completeOnboarding();
     }
@@ -96,28 +90,6 @@ export default function OnboardingScreen() {
     await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
     router.replace('/(auth)/welcome');
   };
-
-  const renderSlide = ({ item }: { item: Slide }) => (
-    <View style={styles.slide}>
-      <View style={styles.illustrationArea}>
-        <View style={[styles.iconOuter, { backgroundColor: item.iconBg }]}>
-          <View style={[styles.iconInner, { backgroundColor: colors.white }]}>
-            <Ionicons name={item.icon} size={56} color={item.iconColor} />
-          </View>
-        </View>
-
-        {/* Decorative dots */}
-        <View style={[styles.dot, styles.dot1, { backgroundColor: item.iconBg }]} />
-        <View style={[styles.dot, styles.dot2, { backgroundColor: item.iconColor + '30' }]} />
-        <View style={[styles.dot, styles.dot3, { backgroundColor: item.iconBg }]} />
-      </View>
-
-      <View style={styles.textArea}>
-        <Text style={styles.slideTitle}>{item.title}</Text>
-        <Text style={styles.slideDescription}>{item.description}</Text>
-      </View>
-    </View>
-  );
 
   const isLast = currentIndex === slides.length - 1;
 
@@ -131,25 +103,37 @@ export default function OnboardingScreen() {
         )}
       </View>
 
-      <FlatList
-        ref={flatListRef}
-        data={slides}
-        renderItem={renderSlide}
-        keyExtractor={item => item.id}
+      <ScrollView
+        ref={scrollRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         bounces={false}
-        getItemLayout={(_, index) => ({
-          length: width,
-          offset: width * index,
-          index,
-        })}
-      />
+        style={styles.scrollView}
+      >
+        {slides.map((item) => (
+          <View key={item.id} style={styles.slide}>
+            <View style={styles.illustrationArea}>
+              <View style={[styles.iconOuter, { backgroundColor: item.iconBg }]}>
+                <View style={styles.iconInner}>
+                  <Ionicons name={item.icon} size={56} color={item.iconColor} />
+                </View>
+              </View>
+              <View style={[styles.dot, styles.dot1, { backgroundColor: item.iconBg }]} />
+              <View style={[styles.dot, styles.dot2, { backgroundColor: item.iconColor + '30' }]} />
+              <View style={[styles.dot, styles.dot3, { backgroundColor: item.iconBg }]} />
+            </View>
 
-      {/* Pagination dots */}
+            <View style={styles.textArea}>
+              <Text style={styles.slideTitle}>{item.title}</Text>
+              <Text style={styles.slideDescription}>{item.description}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
       <View style={styles.pagination}>
         {slides.map((_, i) => (
           <View
@@ -162,7 +146,6 @@ export default function OnboardingScreen() {
         ))}
       </View>
 
-      {/* Action button */}
       <View style={styles.bottomArea}>
         <Pressable
           onPress={goNext}
@@ -204,17 +187,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: fontWeight.medium,
   },
+  scrollView: {
+    flex: 1,
+  },
   slide: {
     width,
-    flex: 1,
     paddingHorizontal: spacing.xl,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   illustrationArea: {
     alignItems: 'center',
     marginBottom: spacing.xxxl,
     position: 'relative',
     height: 200,
+    width: 240,
     justifyContent: 'center',
   },
   iconOuter: {
@@ -228,6 +215,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -240,24 +228,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: 999,
   },
-  dot1: {
-    width: 16,
-    height: 16,
-    top: 20,
-    right: width * 0.15,
-  },
-  dot2: {
-    width: 24,
-    height: 24,
-    bottom: 10,
-    left: width * 0.12,
-  },
-  dot3: {
-    width: 10,
-    height: 10,
-    top: 60,
-    left: width * 0.18,
-  },
+  dot1: { width: 16, height: 16, top: 20, right: 20 },
+  dot2: { width: 24, height: 24, bottom: 10, left: 10 },
+  dot3: { width: 10, height: 10, top: 60, left: 30 },
   textArea: {
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
