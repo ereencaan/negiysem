@@ -84,7 +84,9 @@ export default function OnboardingScreen() {
 
   const goNext = () => {
     if (currentIndex < slides.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
+      const nextIndex = currentIndex + 1;
+      flatListRef.current?.scrollToOffset({ offset: nextIndex * width, animated: true });
+      setCurrentIndex(nextIndex);
     } else {
       completeOnboarding();
     }
@@ -140,6 +142,11 @@ export default function OnboardingScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         bounces={false}
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
       />
 
       {/* Pagination dots */}
