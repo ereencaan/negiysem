@@ -62,7 +62,8 @@
     "comments": "Yorumlar",
     "comments_count": "yorum",
     "no_comments": "Henüz yorum yok. İlk yorumu sen yap!",
-    "add_comment": "Yorum yaz..."
+    "add_comment": "Yorum yaz...",
+    "top_outfit": "Haftanın Kombini"
   },
   "home": {
     "welcome": "Merhaba, {{name}}!",

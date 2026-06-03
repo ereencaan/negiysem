@@ -3,6 +3,7 @@ import {
   View,
   Text,
   Image,
+  ScrollView,
   FlatList,
   Pressable,
   TextInput as RNTextInput,
@@ -13,6 +14,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -23,14 +25,28 @@ import { Avatar } from '../../src/components/ui/Avatar';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const COLUMN_GAP = spacing.sm;
+const GRID_PADDING = spacing.md;
+const COLUMN_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - COLUMN_GAP) / 2;
+
+const CATEGORIES = [
+  { id: 'all', label: 'Tümü', icon: 'apps-outline' as const },
+  { id: 'gunluk', label: 'Günlük', icon: 'sunny-outline' as const },
+  { id: 'ofis', label: 'Ofis', icon: 'briefcase-outline' as const },
+  { id: 'davet', label: 'Davet', icon: 'sparkles-outline' as const },
+  { id: 'spor', label: 'Spor', icon: 'fitness-outline' as const },
+  { id: 'sokak', label: 'Sokak Tarzı', icon: 'walk-outline' as const },
+];
+
 export default function FeedScreen() {
   const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Comment modal state
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentInput, setCommentInput] = useState('');
@@ -45,16 +61,9 @@ export default function FeedScreen() {
     setRefreshing(false);
   }, [user?.id, authLoading]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadPosts();
-    }, [loadPosts]),
-  );
+  useFocusEffect(useCallback(() => { loadPosts(); }, [loadPosts]));
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadPosts();
-  };
+  const onRefresh = () => { setRefreshing(true); loadPosts(); };
 
   const handleLike = async (post: FeedPost) => {
     if (!user) return;
@@ -85,9 +94,7 @@ export default function FeedScreen() {
       const data = await feedService.getComments(commentPostId);
       setComments(data);
       setPosts(prev =>
-        prev.map(p =>
-          p.id === commentPostId ? { ...p, commentsCount: data.length } : p,
-        ),
+        prev.map(p => p.id === commentPostId ? { ...p, commentsCount: data.length } : p),
       );
     }
     setSending(false);
@@ -100,59 +107,59 @@ export default function FeedScreen() {
     if (mins < 60) return `${mins}dk`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}sa`;
-    const days = Math.floor(hours / 24);
-    return `${days}g`;
+    return `${Math.floor(hours / 24)}g`;
   };
 
-  const renderPost = ({ item }: { item: FeedPost }) => (
-    <View style={styles.postCard}>
-      <View style={styles.postHeader}>
-        <Avatar name={item.userName} size={40} />
-        <View style={styles.postHeaderText}>
-          <Text style={styles.postUserName}>{item.userName || 'Kullanıcı'}</Text>
-          <Text style={styles.postTime}>{timeAgo(item.createdAt)}</Text>
+  // Split posts into two columns for masonry effect
+  const topPost = posts.length > 0 ? posts[0] : null;
+  const gridPosts = posts.slice(1);
+  const leftCol: FeedPost[] = [];
+  const rightCol: FeedPost[] = [];
+  gridPosts.forEach((p, i) => {
+    if (i % 2 === 0) leftCol.push(p);
+    else rightCol.push(p);
+  });
+
+  const renderGridCard = (item: FeedPost, tall: boolean) => (
+    <Pressable
+      key={item.id}
+      onPress={() => openComments(item.id)}
+      style={styles.gridCard}
+    >
+      <Image
+        source={{ uri: item.imageUrl }}
+        style={[styles.gridImage, { height: tall ? 220 : 180 }]}
+      />
+      <View style={styles.gridOverlay}>
+        <View style={styles.gridActions}>
+          <Pressable onPress={() => handleLike(item)} hitSlop={6} style={styles.gridActionBtn}>
+            <Ionicons
+              name={item.isLiked ? 'heart' : 'heart-outline'}
+              size={18}
+              color={item.isLiked ? '#ff4757' : colors.white}
+            />
+            {item.likesCount > 0 && (
+              <Text style={styles.gridActionCount}>{item.likesCount}</Text>
+            )}
+          </Pressable>
+          {item.commentsCount > 0 && (
+            <View style={styles.gridActionBtn}>
+              <Ionicons name="chatbubble-outline" size={16} color={colors.white} />
+              <Text style={styles.gridActionCount}>{item.commentsCount}</Text>
+            </View>
+          )}
         </View>
       </View>
-      <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-
-      {/* Action row */}
-      <View style={styles.actionsRow}>
-        <Pressable onPress={() => handleLike(item)} hitSlop={8} style={styles.actionBtn}>
-          <Ionicons
-            name={item.isLiked ? 'heart' : 'heart-outline'}
-            size={26}
-            color={item.isLiked ? colors.error : colors.text}
-          />
-        </Pressable>
-        <Pressable onPress={() => openComments(item.id)} hitSlop={8} style={styles.actionBtn}>
-          <Ionicons name="chatbubble-outline" size={24} color={colors.text} />
-        </Pressable>
-      </View>
-
-      {/* Likes count */}
-      {item.likesCount > 0 && (
-        <Text style={styles.likesCount}>
-          {item.likesCount} {t('feed.likes')}
-        </Text>
-      )}
-
-      {/* Caption */}
-      {item.caption && (
-        <View style={styles.postCaption}>
-          <Text style={styles.captionUser}>{item.userName}</Text>
-          <Text style={styles.captionText}> {item.caption}</Text>
+      <View style={styles.gridInfo}>
+        <View style={styles.gridUserRow}>
+          <Avatar name={item.userName} size={22} />
+          <Text style={styles.gridUserName} numberOfLines={1}>{item.userName || 'Kullanıcı'}</Text>
         </View>
-      )}
-
-      {/* Comments preview */}
-      {item.commentsCount > 0 && (
-        <Pressable onPress={() => openComments(item.id)}>
-          <Text style={styles.viewComments}>
-            {item.commentsCount} {t('feed.comments_count')}
-          </Text>
-        </Pressable>
-      )}
-    </View>
+        {item.caption && (
+          <Text style={styles.gridCaption} numberOfLines={2}>{item.caption}</Text>
+        )}
+      </View>
+    </Pressable>
   );
 
   if (isLoading) {
@@ -174,19 +181,86 @@ export default function FeedScreen() {
           description={t('feed.empty_description')}
         />
       ) : (
-        <FlatList
-          data={posts}
-          renderItem={renderPost}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
+        <ScrollView
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
-        />
+        >
+          {/* Category chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryBar}
+          >
+            {CATEGORIES.map(cat => (
+              <Pressable
+                key={cat.id}
+                onPress={() => setSelectedCategory(cat.id)}
+                style={[
+                  styles.categoryChip,
+                  selectedCategory === cat.id && styles.categoryChipActive,
+                ]}
+              >
+                <Ionicons
+                  name={cat.icon}
+                  size={16}
+                  color={selectedCategory === cat.id ? colors.white : colors.textSecondary}
+                />
+                <Text style={[
+                  styles.categoryText,
+                  selectedCategory === cat.id && styles.categoryTextActive,
+                ]}>
+                  {cat.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* Featured / Top Post */}
+          {topPost && (
+            <Pressable
+              onPress={() => openComments(topPost.id)}
+              style={styles.featuredCard}
+            >
+              <Image source={{ uri: topPost.imageUrl }} style={styles.featuredImage} />
+              <View style={styles.featuredGradient}>
+                <View style={styles.featuredBadge}>
+                  <Ionicons name="trophy" size={12} color="#f5a623" />
+                  <Text style={styles.featuredBadgeText}>{t('feed.top_outfit')}</Text>
+                </View>
+                <View style={styles.featuredBottom}>
+                  <View style={styles.featuredUser}>
+                    <Avatar name={topPost.userName} size={28} />
+                    <Text style={styles.featuredUserName}>{topPost.userName}</Text>
+                  </View>
+                  <View style={styles.featuredStats}>
+                    <Pressable onPress={() => handleLike(topPost)} style={styles.gridActionBtn}>
+                      <Ionicons
+                        name={topPost.isLiked ? 'heart' : 'heart-outline'}
+                        size={20}
+                        color={topPost.isLiked ? '#ff4757' : colors.white}
+                      />
+                      <Text style={styles.gridActionCount}>{topPost.likesCount}</Text>
+                    </Pressable>
+                  </View>
+                </View>
+                {topPost.caption && (
+                  <Text style={styles.featuredCaption} numberOfLines={2}>{topPost.caption}</Text>
+                )}
+              </View>
+            </Pressable>
+          )}
+
+          {/* Masonry Grid */}
+          <View style={styles.gridContainer}>
+            <View style={styles.gridColumn}>
+              {leftCol.map((p, i) => renderGridCard(p, i % 3 === 0))}
+            </View>
+            <View style={styles.gridColumn}>
+              {rightCol.map((p, i) => renderGridCard(p, i % 3 === 1))}
+            </View>
+          </View>
+        </ScrollView>
       )}
 
       {/* Comments Modal */}
@@ -204,7 +278,6 @@ export default function FeedScreen() {
           <View style={styles.commentSheet}>
             <View style={styles.sheetHandle} />
             <Text style={styles.commentsTitle}>{t('feed.comments')}</Text>
-
             {commentsLoading ? (
               <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.xl }} />
             ) : (
@@ -212,9 +285,7 @@ export default function FeedScreen() {
                 data={comments}
                 keyExtractor={c => c.id}
                 style={styles.commentsList}
-                ListEmptyComponent={
-                  <Text style={styles.noComments}>{t('feed.no_comments')}</Text>
-                }
+                ListEmptyComponent={<Text style={styles.noComments}>{t('feed.no_comments')}</Text>}
                 renderItem={({ item: c }) => (
                   <View style={styles.commentRow}>
                     <Text style={styles.commentUser}>{c.userName || 'Kullanıcı'}</Text>
@@ -224,7 +295,6 @@ export default function FeedScreen() {
                 )}
               />
             )}
-
             <View style={styles.commentInputRow}>
               <RNTextInput
                 style={styles.commentInput}
@@ -251,81 +321,169 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { paddingBottom: spacing.xxxl },
-  postCard: {
-    backgroundColor: colors.card,
-    marginBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+
+  // Categories
+  categoryBar: {
+    paddingHorizontal: GRID_PADDING,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
-  postHeader: {
+  categoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-  },
-  postHeaderText: {
-    marginLeft: spacing.md,
-  },
-  postUserName: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
-  postTime: {
-    fontSize: fontSize.xs,
-    color: colors.textLight,
-    marginTop: 1,
-  },
-  postImage: {
-    width: '100%',
-    height: 360,
-    resizeMode: 'contain',
-    backgroundColor: colors.surface,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    gap: spacing.lg,
-  },
-  actionBtn: {
-    padding: 2,
-  },
-  likesCount: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-    paddingHorizontal: spacing.md,
-    marginTop: spacing.xs,
-  },
-  postCaption: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    flexWrap: 'wrap',
-  },
-  captionUser: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
-  captionText: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    flex: 1,
-  },
-  viewComments: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
+    gap: 4,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  // Comments modal
-  modalBackdrop: {
-    flex: 1,
+  categoryChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  categoryText: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    fontWeight: fontWeight.medium,
+  },
+  categoryTextActive: {
+    color: colors.white,
+  },
+
+  // Featured card
+  featuredCard: {
+    marginHorizontal: GRID_PADDING,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  featuredImage: {
+    width: '100%',
+    height: 260,
+    backgroundColor: colors.surface,
+  },
+  featuredGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: spacing.md,
+    paddingTop: spacing.xxxl,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  featuredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    marginBottom: spacing.sm,
+  },
+  featuredBadgeText: {
+    fontSize: fontSize.xs,
+    color: '#f5a623',
+    fontWeight: fontWeight.semibold,
+  },
+  featuredBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  featuredUser: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  featuredUserName: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
+  },
+  featuredStats: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  featuredCaption: {
+    fontSize: fontSize.sm,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: spacing.xs,
+    lineHeight: 18,
+  },
+
+  // Masonry grid
+  gridContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: GRID_PADDING,
+    gap: COLUMN_GAP,
+  },
+  gridColumn: {
+    flex: 1,
+  },
+  gridCard: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    marginBottom: COLUMN_GAP,
+  },
+  gridImage: {
+    width: '100%',
+    backgroundColor: colors.surface,
+  },
+  gridOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: spacing.sm,
+    flexDirection: 'row',
     justifyContent: 'flex-end',
   },
+  gridActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  gridActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+  },
+  gridActionCount: {
+    fontSize: 10,
+    color: colors.white,
+    fontWeight: fontWeight.semibold,
+  },
+  gridInfo: {
+    padding: spacing.sm,
+  },
+  gridUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  gridUserName: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    flex: 1,
+  },
+  gridCaption: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    lineHeight: 16,
+  },
+
+  // Comments modal (unchanged)
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalBackdropPress: { flex: 1 },
   commentSheet: {
     backgroundColor: colors.background,
@@ -335,77 +493,26 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: colors.border, alignSelf: 'center',
+    marginTop: spacing.sm, marginBottom: spacing.md,
   },
-  commentsTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  commentsList: {
-    paddingHorizontal: spacing.xl,
-  },
-  noComments: {
-    textAlign: 'center',
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginTop: spacing.xl,
-  },
-  commentRow: {
-    marginBottom: spacing.md,
-  },
-  commentUser: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-  },
-  commentText: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    lineHeight: 20,
-    marginTop: 2,
-  },
-  commentTime: {
-    fontSize: fontSize.xs,
-    color: colors.textLight,
-    marginTop: 2,
-  },
+  commentsTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.text, paddingHorizontal: spacing.xl, marginBottom: spacing.md },
+  commentsList: { paddingHorizontal: spacing.xl },
+  noComments: { textAlign: 'center', color: colors.textSecondary, fontSize: fontSize.sm, marginTop: spacing.xl },
+  commentRow: { marginBottom: spacing.md },
+  commentUser: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.text },
+  commentText: { fontSize: fontSize.sm, color: colors.text, lineHeight: 20, marginTop: 2 },
+  commentTime: { fontSize: fontSize.xs, color: colors.textLight, marginTop: 2 },
   commentInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    gap: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md,
+    paddingTop: spacing.md, gap: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderLight,
   },
   commentInput: {
-    flex: 1,
-    minHeight: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: fontSize.sm,
-    color: colors.text,
-    backgroundColor: colors.white,
+    flex: 1, minHeight: 40, borderWidth: 1, borderColor: colors.border,
+    borderRadius: borderRadius.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    fontSize: fontSize.sm, color: colors.text, backgroundColor: colors.white,
   },
-  sendBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  sendBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { opacity: 0.5 },
 });
