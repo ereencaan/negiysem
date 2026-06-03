@@ -110,9 +110,14 @@ export default function FeedScreen() {
     return `${Math.floor(hours / 24)}g`;
   };
 
+  // Filter by category
+  const filteredPosts = selectedCategory === 'all'
+    ? posts
+    : posts.filter(p => p.category === selectedCategory);
+
   // Split posts into two columns for masonry effect
-  const topPost = posts.length > 0 ? posts[0] : null;
-  const gridPosts = posts.slice(1);
+  const topPost = filteredPosts.length > 0 ? filteredPosts[0] : null;
+  const gridPosts = filteredPosts.slice(1);
   const leftCol: FeedPost[] = [];
   const rightCol: FeedPost[] = [];
   gridPosts.forEach((p, i) => {
@@ -121,35 +126,13 @@ export default function FeedScreen() {
   });
 
   const renderGridCard = (item: FeedPost, tall: boolean) => (
-    <Pressable
-      key={item.id}
-      onPress={() => openComments(item.id)}
-      style={styles.gridCard}
-    >
-      <Image
-        source={{ uri: item.imageUrl }}
-        style={[styles.gridImage, { height: tall ? 220 : 180 }]}
-      />
-      <View style={styles.gridOverlay}>
-        <View style={styles.gridActions}>
-          <Pressable onPress={() => handleLike(item)} hitSlop={6} style={styles.gridActionBtn}>
-            <Ionicons
-              name={item.isLiked ? 'heart' : 'heart-outline'}
-              size={18}
-              color={item.isLiked ? '#ff4757' : colors.white}
-            />
-            {item.likesCount > 0 && (
-              <Text style={styles.gridActionCount}>{item.likesCount}</Text>
-            )}
-          </Pressable>
-          {item.commentsCount > 0 && (
-            <View style={styles.gridActionBtn}>
-              <Ionicons name="chatbubble-outline" size={16} color={colors.white} />
-              <Text style={styles.gridActionCount}>{item.commentsCount}</Text>
-            </View>
-          )}
-        </View>
-      </View>
+    <View key={item.id} style={styles.gridCard}>
+      <Pressable onPress={() => openComments(item.id)}>
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={[styles.gridImage, { height: tall ? 220 : 180 }]}
+        />
+      </Pressable>
       <View style={styles.gridInfo}>
         <View style={styles.gridUserRow}>
           <Avatar name={item.userName} size={22} />
@@ -158,8 +141,26 @@ export default function FeedScreen() {
         {item.caption && (
           <Text style={styles.gridCaption} numberOfLines={2}>{item.caption}</Text>
         )}
+        <View style={styles.gridBottomRow}>
+          <Pressable onPress={() => handleLike(item)} hitSlop={6} style={styles.gridLikeBtn}>
+            <Ionicons
+              name={item.isLiked ? 'heart' : 'heart-outline'}
+              size={18}
+              color={item.isLiked ? '#ff4757' : colors.textSecondary}
+            />
+            {item.likesCount > 0 && (
+              <Text style={styles.gridLikeCount}>{item.likesCount}</Text>
+            )}
+          </Pressable>
+          <Pressable onPress={() => openComments(item.id)} hitSlop={6} style={styles.gridLikeBtn}>
+            <Ionicons name="chatbubble-outline" size={16} color={colors.textSecondary} />
+            {item.commentsCount > 0 && (
+              <Text style={styles.gridLikeCount}>{item.commentsCount}</Text>
+            )}
+          </Pressable>
+        </View>
       </View>
-    </Pressable>
+    </View>
   );
 
   if (isLoading) {
@@ -234,13 +235,13 @@ export default function FeedScreen() {
                     <Text style={styles.featuredUserName}>{topPost.userName}</Text>
                   </View>
                   <View style={styles.featuredStats}>
-                    <Pressable onPress={() => handleLike(topPost)} style={styles.gridActionBtn}>
+                    <Pressable onPress={() => handleLike(topPost)} style={styles.featuredAction}>
                       <Ionicons
                         name={topPost.isLiked ? 'heart' : 'heart-outline'}
                         size={20}
                         color={topPost.isLiked ? '#ff4757' : colors.white}
                       />
-                      <Text style={styles.gridActionCount}>{topPost.likesCount}</Text>
+                      <Text style={styles.featuredActionText}>{topPost.likesCount}</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -408,6 +409,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
   },
+  featuredAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+  },
+  featuredActionText: {
+    fontSize: fontSize.xs,
+    color: colors.white,
+    fontWeight: fontWeight.semibold,
+  },
   featuredCaption: {
     fontSize: fontSize.sm,
     color: 'rgba(255,255,255,0.9)',
@@ -434,35 +449,24 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: colors.surface,
   },
-  gridOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+  gridInfo: {
     padding: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
-  gridActions: {
+  gridBottomRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.xs,
   },
-  gridActionBtn: {
+  gridLikeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: borderRadius.full,
   },
-  gridActionCount: {
-    fontSize: 10,
-    color: colors.white,
-    fontWeight: fontWeight.semibold,
-  },
-  gridInfo: {
-    padding: spacing.sm,
+  gridLikeCount: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    fontWeight: fontWeight.medium,
   },
   gridUserRow: {
     flexDirection: 'row',

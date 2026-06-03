@@ -6,6 +6,7 @@ export interface FeedPost {
   userId: string;
   imageUrl: string;
   caption: string | null;
+  category: string;
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;
@@ -50,6 +51,7 @@ export const feedService = {
         userId: item.user_id as string,
         imageUrl,
         caption: item.caption as string | null,
+        category: (item.category as string) || 'gunluk',
         likesCount: item.likes_count as number,
         commentsCount: comments.length,
         isLiked: currentUserId ? likes.some(l => l.user_id === currentUserId) : false,
