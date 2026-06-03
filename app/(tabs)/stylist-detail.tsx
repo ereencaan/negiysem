@@ -12,11 +12,13 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../src/hooks/useAuth';
 import {
   stylistService,
   type StylistListItem,
   type StylistPortfolioItem,
 } from '../../src/services/stylist.service';
+import { followService, type FollowStats } from '../../src/services/follow.service';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Badge } from '../../src/components/ui/Badge';
 import { Button } from '../../src/components/ui/Button';
@@ -26,12 +28,15 @@ import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/c
 
 export default function StylistDetailScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [stylist, setStylist] = useState<StylistListItem | null>(null);
   const [portfolio, setPortfolio] = useState<StylistPortfolioItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
 
   useEffect(() => {
     if (!id) {
@@ -41,13 +46,27 @@ export default function StylistDetailScreen() {
     Promise.all([
       stylistService.getStylistById(id),
       stylistService.getStylistPortfolio(id),
+      followService.getFollowStats(id),
+      user ? followService.isFollowing(user.id, id) : Promise.resolve(false),
     ])
-      .then(([stylistData, portfolioData]) => {
+      .then(([stylistData, portfolioData, stats, following]) => {
         setStylist(stylistData);
         setPortfolio(portfolioData);
+        setFollowStats(stats);
+        setIsFollowing(following);
       })
       .finally(() => setIsLoading(false));
-  }, [id]);
+  }, [id, user]);
+
+  const handleFollow = async () => {
+    if (!user || !id) return;
+    const newState = await followService.toggleFollow(user.id, id, isFollowing);
+    setIsFollowing(newState);
+    setFollowStats(prev => ({
+      ...prev,
+      followersCount: prev.followersCount + (newState ? 1 : -1),
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -87,6 +106,33 @@ export default function StylistDetailScreen() {
             </Text>
           </View>
           {stylist.isVerified && <Badge label={t('stylists.verified')} variant="completed" />}
+
+          {/* Follow stats + button */}
+          <View style={styles.followSection}>
+            <View style={styles.followStat}>
+              <Text style={styles.followNumber}>{followStats.followersCount}</Text>
+              <Text style={styles.followLabel}>{t('follow.followers')}</Text>
+            </View>
+            <View style={styles.followStat}>
+              <Text style={styles.followNumber}>{followStats.followingCount}</Text>
+              <Text style={styles.followLabel}>{t('follow.following_label')}</Text>
+            </View>
+            {user && user.id !== id && (
+              <Pressable
+                onPress={handleFollow}
+                style={[styles.followDetailBtn, isFollowing && styles.followDetailBtnActive]}
+              >
+                <Ionicons
+                  name={isFollowing ? 'checkmark' : 'person-add-outline'}
+                  size={16}
+                  color={isFollowing ? colors.primary : colors.white}
+                />
+                <Text style={[styles.followDetailText, isFollowing && styles.followDetailTextActive]}>
+                  {isFollowing ? t('follow.following') : t('follow.follow')}
+                </Text>
+              </Pressable>
+            )}
+          </View>
         </View>
 
         <Card style={styles.section}>
@@ -156,6 +202,46 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: spacing.xl,
+  },
+  followSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+    marginTop: spacing.md,
+  },
+  followStat: {
+    alignItems: 'center',
+  },
+  followNumber: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
+  followLabel: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+  },
+  followDetailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+  },
+  followDetailBtnActive: {
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  followDetailText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
+  },
+  followDetailTextActive: {
+    color: colors.primary,
   },
   name: {
     fontSize: fontSize.xxl,

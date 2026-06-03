@@ -171,6 +171,12 @@
     "later": "Daha Sonra",
     "thank_you": "Değerlendirmeniz için teşekkürler!"
   },
+  "follow": {
+    "follow": "Takip Et",
+    "following": "Takip Ediliyor",
+    "followers": "Takipçi",
+    "following_label": "Takip"
+  },
   "payment": {
     "commission_note": "Her kombin tamamlandığında, belirlediğiniz ücretten %10 platform komisyonu kesilir.",
     "card_info": "Ödeme Kartı",

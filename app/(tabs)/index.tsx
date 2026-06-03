@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { feedService, type FeedPost, type PostComment } from '../../src/services/feed.service';
+import { followService } from '../../src/services/follow.service';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
@@ -32,6 +33,7 @@ const COLUMN_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - COLUMN_GAP) / 2;
 
 const CATEGORIES = [
   { id: 'all', label: 'Tümü', icon: 'apps-outline' as const },
+  { id: 'following', label: 'Takip', icon: 'heart-outline' as const },
   { id: 'gunluk', label: 'Günlük', icon: 'sunny-outline' as const },
   { id: 'ofis', label: 'Ofis', icon: 'briefcase-outline' as const },
   { id: 'davet', label: 'Davet', icon: 'sparkles-outline' as const },
@@ -46,6 +48,7 @@ export default function FeedScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
 
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [comments, setComments] = useState<PostComment[]>([]);
@@ -55,8 +58,12 @@ export default function FeedScreen() {
 
   const loadPosts = useCallback(async () => {
     if (authLoading) return;
-    const data = await feedService.getFeedPosts(user?.id);
+    const [data, fIds] = await Promise.all([
+      feedService.getFeedPosts(user?.id),
+      user ? followService.getFollowingIds(user.id) : Promise.resolve([]),
+    ]);
     setPosts(data);
+    setFollowingIds(fIds);
     setIsLoading(false);
     setRefreshing(false);
   }, [user?.id, authLoading]);
@@ -113,7 +120,9 @@ export default function FeedScreen() {
   // Filter by category
   const filteredPosts = selectedCategory === 'all'
     ? posts
-    : posts.filter(p => p.category === selectedCategory);
+    : selectedCategory === 'following'
+      ? posts.filter(p => followingIds.includes(p.userId))
+      : posts.filter(p => p.category === selectedCategory);
 
   // Split posts into two columns for masonry effect
   const topPost = filteredPosts.length > 0 ? filteredPosts[0] : null;

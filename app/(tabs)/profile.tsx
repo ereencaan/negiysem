@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { requestService } from '../../src/services/request.service';
 import { wardrobeService } from '../../src/services/wardrobe.service';
+import { followService, type FollowStats } from '../../src/services/follow.service';
 import { supabase } from '../../src/lib/supabase';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Card } from '../../src/components/ui/Card';
@@ -22,10 +23,13 @@ export default function ProfileScreen() {
     totalEarnings: 0, avgRating: 0, totalReviews: 0,
   });
   const [bankInfo, setBankInfo] = useState({ iban: '', bankName: '', accountHolder: '' });
+  const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
 
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
+
+      followService.getFollowStats(user.id).then(setFollowStats);
 
       if (activeRole === 'stylist' && isStylist) {
         supabase.from('stylist_profiles').select('iban, bank_name, account_holder, price_per_outfit').eq('user_id', user.id).single()
@@ -84,6 +88,17 @@ export default function ProfileScreen() {
             <Text style={styles.instagram}>{user.instagramUrl}</Text>
           )}
           <Text style={styles.email}>{user?.email}</Text>
+          <View style={styles.followRow}>
+            <View style={styles.followItem}>
+              <Text style={styles.followNum}>{followStats.followersCount}</Text>
+              <Text style={styles.followLbl}>{t('follow.followers')}</Text>
+            </View>
+            <View style={styles.followDivider} />
+            <View style={styles.followItem}>
+              <Text style={styles.followNum}>{followStats.followingCount}</Text>
+              <Text style={styles.followLbl}>{t('follow.following_label')}</Text>
+            </View>
+          </View>
         </View>
 
         {/* Stats */}
@@ -266,6 +281,16 @@ const styles = StyleSheet.create({
   name: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text, marginTop: spacing.md },
   instagram: { fontSize: fontSize.sm, color: colors.primary, marginTop: spacing.xs },
   email: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+  followRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    gap: spacing.lg,
+  },
+  followItem: { alignItems: 'center' },
+  followNum: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
+  followLbl: { fontSize: fontSize.xs, color: colors.textSecondary },
+  followDivider: { width: 1, height: 24, backgroundColor: colors.border },
   sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.text, marginBottom: spacing.md },
   statsRow: { flexDirection: 'row', marginBottom: spacing.xl, gap: spacing.sm },
   statItem: {
