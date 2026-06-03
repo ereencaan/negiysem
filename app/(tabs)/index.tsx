@@ -16,7 +16,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -44,6 +44,7 @@ const CATEGORIES = [
 export default function FeedScreen() {
   const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -143,10 +144,13 @@ export default function FeedScreen() {
         />
       </Pressable>
       <View style={styles.gridInfo}>
-        <View style={styles.gridUserRow}>
+        <Pressable
+          onPress={() => router.push(`/(tabs)/user-profile?userId=${item.userId}`)}
+          style={styles.gridUserRow}
+        >
           <Avatar name={item.userName} size={22} />
           <Text style={styles.gridUserName} numberOfLines={1}>{item.userName || 'Kullanıcı'}</Text>
-        </View>
+        </Pressable>
         {item.caption && (
           <Text style={styles.gridCaption} numberOfLines={2}>{item.caption}</Text>
         )}
@@ -239,10 +243,13 @@ export default function FeedScreen() {
                   <Text style={styles.featuredBadgeText}>{t('feed.top_outfit')}</Text>
                 </View>
                 <View style={styles.featuredBottom}>
-                  <View style={styles.featuredUser}>
+                  <Pressable
+                    onPress={() => router.push(`/(tabs)/user-profile?userId=${topPost.userId}`)}
+                    style={styles.featuredUser}
+                  >
                     <Avatar name={topPost.userName} size={28} />
                     <Text style={styles.featuredUserName}>{topPost.userName}</Text>
-                  </View>
+                  </Pressable>
                   <View style={styles.featuredStats}>
                     <Pressable onPress={() => handleLike(topPost)} style={styles.featuredAction}>
                       <Ionicons
