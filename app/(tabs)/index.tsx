@@ -56,6 +56,9 @@ export default function FeedScreen() {
   const [commentInput, setCommentInput] = useState('');
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; postCount: number }>>([]);
+  const [searchingByHashtag, setSearchingByHashtag] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     if (authLoading) return;
@@ -71,7 +74,30 @@ export default function FeedScreen() {
 
   useFocusEffect(useCallback(() => { loadPosts(); }, [loadPosts]));
 
-  const onRefresh = () => { setRefreshing(true); loadPosts(); };
+  const onRefresh = () => { setRefreshing(true); setSearchingByHashtag(null); loadPosts(); };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length > 1) {
+      const results = await feedService.searchHashtags(query.replace(/^#/, ''));
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const selectHashtag = async (tagName: string) => {
+    setSearchingByHashtag(tagName);
+    setSearchQuery('');
+    setSearchResults([]);
+    const data = await feedService.getPostsByHashtag(tagName, user?.id);
+    setPosts(data);
+  };
+
+  const clearHashtagFilter = () => {
+    setSearchingByHashtag(null);
+    loadPosts();
+  };
 
   const handleLike = async (post: FeedPost) => {
     if (!user) return;
@@ -200,6 +226,46 @@ export default function FeedScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
         >
+          {/* Search bar */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={18} color={colors.textLight} />
+              <RNTextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={handleSearch}
+                placeholder={t('feed.search_placeholder')}
+                placeholderTextColor={colors.textLight}
+                autoCapitalize="none"
+              />
+              {searchQuery.length > 0 && (
+                <Pressable onPress={() => { setSearchQuery(''); setSearchResults([]); }}>
+                  <Ionicons name="close-circle" size={18} color={colors.textLight} />
+                </Pressable>
+              )}
+            </View>
+            {searchResults.length > 0 && (
+              <View style={styles.searchDropdown}>
+                {searchResults.map(h => (
+                  <Pressable key={h.id} onPress={() => selectHashtag(h.name)} style={styles.searchItem}>
+                    <Text style={styles.searchHashtag}>#{h.name}</Text>
+                    <Text style={styles.searchCount}>{h.postCount} paylaşım</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Active hashtag filter */}
+          {searchingByHashtag && (
+            <View style={styles.activeFilter}>
+              <Text style={styles.activeFilterText}>#{searchingByHashtag}</Text>
+              <Pressable onPress={clearHashtagFilter}>
+                <Ionicons name="close-circle" size={20} color={colors.primary} />
+              </Pressable>
+            </View>
+          )}
+
           {/* Category chips */}
           <ScrollView
             horizontal
@@ -280,6 +346,16 @@ export default function FeedScreen() {
         </ScrollView>
       )}
 
+      {/* Create Post FAB */}
+      {user && (
+        <Pressable
+          onPress={() => router.push('/(tabs)/create-post')}
+          style={styles.fab}
+        >
+          <Ionicons name="add" size={28} color={colors.white} />
+        </Pressable>
+      )}
+
       {/* Comments Modal */}
       <Modal
         visible={commentPostId !== null}
@@ -338,6 +414,80 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  // Search
+  searchContainer: {
+    paddingHorizontal: GRID_PADDING,
+    paddingTop: spacing.sm,
+    zIndex: 10,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    color: colors.text,
+    paddingVertical: 2,
+  },
+  searchDropdown: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  searchItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  searchHashtag: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.primary },
+  searchCount: { fontSize: fontSize.xs, color: colors.textSecondary },
+  activeFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    alignSelf: 'flex-start',
+    marginLeft: GRID_PADDING,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.primarySoft,
+    borderRadius: borderRadius.full,
+  },
+  activeFilterText: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.primary },
+
+  // FAB
+  fab: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    right: spacing.xl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
 
   // Categories
   categoryBar: {

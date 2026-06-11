@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, Image, ScrollView, Pressable, FlatList, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,12 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { requestService } from '../../src/services/request.service';
 import { wardrobeService } from '../../src/services/wardrobe.service';
 import { followService, type FollowStats } from '../../src/services/follow.service';
+import { feedService, type FeedPost } from '../../src/services/feed.service';
 import { supabase } from '../../src/lib/supabase';
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const TILE_GAP = 4;
+const TILE_SZ = (SCREEN_W - TILE_GAP * 4) / 3;
 import { Avatar } from '../../src/components/ui/Avatar';
 import { Card } from '../../src/components/ui/Card';
 import { Button } from '../../src/components/ui/Button';
@@ -24,12 +29,14 @@ export default function ProfileScreen() {
   });
   const [bankInfo, setBankInfo] = useState({ iban: '', bankName: '', accountHolder: '' });
   const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
+  const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
 
       followService.getFollowStats(user.id).then(setFollowStats);
+      feedService.getFeedPosts(user.id).then(all => setMyPosts(all.filter(p => p.userId === user.id)));
 
       if (activeRole === 'stylist' && isStylist) {
         supabase.from('stylist_profiles').select('iban, bank_name, account_holder, price_per_outfit').eq('user_id', user.id).single()
@@ -244,6 +251,23 @@ export default function ProfileScreen() {
           </Card>
         )}
 
+        {/* My Posts Grid */}
+        {myPosts.length > 0 && (
+          <>
+            <View style={styles.myPostsHeader}>
+              <Ionicons name="grid-outline" size={18} color={colors.text} />
+              <Text style={styles.myPostsTitle}>{t('profile.my_posts')} ({myPosts.length})</Text>
+            </View>
+            <View style={styles.myPostsGrid}>
+              {myPosts.map(post => (
+                <View key={post.id} style={styles.myPostTile}>
+                  <Image source={{ uri: post.imageUrl }} style={styles.myPostImage} />
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
         <Button
           title={t('auth.logout')}
           onPress={() => {
@@ -326,6 +350,19 @@ const styles = StyleSheet.create({
   promoDesc: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
   logoutBtn: { marginTop: spacing.sm },
   editBtn: { marginBottom: spacing.lg },
+  myPostsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  myPostsTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.text },
+  myPostsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: TILE_GAP, marginBottom: spacing.lg },
+  myPostTile: { width: TILE_SZ, height: TILE_SZ },
+  myPostImage: { width: '100%', height: '100%', backgroundColor: colors.surface },
   bankHeader: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -63,7 +63,11 @@
     "comments_count": "yorum",
     "no_comments": "Henüz yorum yok. İlk yorumu sen yap!",
     "add_comment": "Yorum yaz...",
-    "top_outfit": "Haftanın Kombini"
+    "top_outfit": "Haftanın Kombini",
+    "search_placeholder": "Hashtag ara...",
+    "select_photo": "Fotoğraf Seç",
+    "select_category": "Kategori",
+    "add_hashtags": "Hashtag Ekle"
   },
   "home": {
     "welcome": "Merhaba, {{name}}!",
@@ -241,6 +245,7 @@
     "no_posts": "Henüz paylaşım yok",
     "no_posts_desc": "Bu kullanıcı henüz bir kombin paylaşmamış",
     "view_stylist_profile": "Stilist Profilini Gör",
+    "my_posts": "Paylaşımlarım",
     "stylist_rating": "Puan",
     "reviews_count": "Değerlendirme",
     "completed_jobs": "Tamamlanan",

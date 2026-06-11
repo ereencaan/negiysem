@@ -104,30 +104,100 @@ export const feedService = {
     userId: string,
     imageUri: string,
     caption?: string,
+    hashtags?: string[],
+    category?: string,
   ): Promise<ServiceResult<boolean>> {
     try {
       const fileName = `${userId}/${Date.now()}.jpg`;
       const response = await fetch(imageUri);
       const blob = await response.blob();
+      const file = new File([blob], fileName, { type: 'image/jpeg' });
 
       const { error: uploadError } = await supabase.storage
         .from('feed')
-        .upload(fileName, blob, { contentType: 'image/jpeg' });
+        .upload(fileName, file, { contentType: 'image/jpeg' });
 
       if (uploadError) return { data: null, error: 'errors.generic' };
 
-      const { error: dbError } = await supabase
+      const { data: post, error: dbError } = await supabase
         .from('feed_posts')
         .insert({
           user_id: userId,
           image_path: fileName,
           caption: caption || null,
-        });
+          category: category || 'gunluk',
+        })
+        .select('id')
+        .single();
 
-      if (dbError) return { data: null, error: 'errors.generic' };
+      if (dbError || !post) return { data: null, error: 'errors.generic' };
+
+      // Link hashtags
+      if (hashtags && hashtags.length > 0) {
+        for (const tag of hashtags) {
+          const normalizedTag = tag.toLowerCase().replace(/[^a-züşığöç0-9]/g, '');
+          if (!normalizedTag) continue;
+          const { data: existing } = await supabase
+            .from('hashtags')
+            .select('id')
+            .eq('name', normalizedTag)
+            .maybeSingle();
+
+          let hashtagId: string;
+          if (existing) {
+            hashtagId = (existing as { id: string }).id;
+          } else {
+            const { data: created } = await supabase
+              .from('hashtags')
+              .insert({ name: normalizedTag })
+              .select('id')
+              .single();
+            if (!created) continue;
+            hashtagId = (created as { id: string }).id;
+          }
+          await supabase.from('post_hashtags').insert({
+            post_id: (post as { id: string }).id,
+            hashtag_id: hashtagId,
+          });
+        }
+      }
+
       return { data: true, error: null };
     } catch {
       return { data: null, error: 'errors.generic' };
     }
+  },
+
+  async searchHashtags(query: string): Promise<Array<{ id: string; name: string; postCount: number }>> {
+    const { data } = await supabase
+      .from('hashtags')
+      .select('id, name, post_count')
+      .ilike('name', `%${query}%`)
+      .order('post_count', { ascending: false })
+      .limit(20);
+    if (!data) return [];
+    return data.map(h => {
+      const d = h as { id: string; name: string; post_count: number };
+      return { id: d.id, name: d.name, postCount: d.post_count };
+    });
+  },
+
+  async getPostsByHashtag(hashtagName: string, currentUserId?: string): Promise<FeedPost[]> {
+    const { data: hashtag } = await supabase
+      .from('hashtags')
+      .select('id')
+      .eq('name', hashtagName)
+      .maybeSingle();
+    if (!hashtag) return [];
+
+    const { data: postIds } = await supabase
+      .from('post_hashtags')
+      .select('post_id')
+      .eq('hashtag_id', (hashtag as { id: string }).id);
+    if (!postIds || postIds.length === 0) return [];
+
+    const ids = postIds.map(p => (p as { post_id: string }).post_id);
+    const allPosts = await this.getFeedPosts(currentUserId);
+    return allPosts.filter(p => ids.includes(p.id));
   },
 };

@@ -136,6 +136,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="create-post"
+        options={{
+          href: null,
+          title: t('feed.new_post'),
+        }}
+      />
+      <Tabs.Screen
         name="request-detail"
         options={{
           href: null,
