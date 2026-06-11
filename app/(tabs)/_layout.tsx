@@ -143,6 +143,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="activate-styling"
+        options={{
+          href: null,
+          title: t('eligibility.activate_title'),
+        }}
+      />
+      <Tabs.Screen
         name="request-detail"
         options={{
           href: null,

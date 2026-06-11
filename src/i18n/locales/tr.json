@@ -181,6 +181,27 @@
     "followers": "Takipçi",
     "following_label": "Takip"
   },
+  "eligibility": {
+    "title": "Kombin Yaparak Kazan",
+    "completed": "koşul tamamlandı",
+    "wardrobe": "Gardıroba {{count}} kıyafet yükle",
+    "posts": "{{count}} kombin paylaş",
+    "likes": "Toplam {{count}} beğeni al",
+    "following": "En az {{count}} kişiyi takip et",
+    "profile": "Profil fotoğrafı ve bio ekle",
+    "activate": "Stilist Modunu Aç",
+    "activate_title": "Kombin Yapmaya Başla",
+    "activate_desc": "Koşulları tamamladın! Fiyatını ve banka bilgilerini girerek diğer kullanıcılara kombin önermeye başlayabilirsin.",
+    "set_price": "Kombin Başı Fiyat Belirle",
+    "you_earn": "Sen kazanırsın",
+    "platform_gets": "Platform komisyonu",
+    "min_price": "Minimum fiyat 10₺ olmalıdır",
+    "iban_required": "Kazancının aktarılacağı IBAN gerekli",
+    "activated": "Tebrikler!",
+    "activated_desc": "Artık diğer kullanıcılardan kombin talebi alabilirsin. Profilinde 'Kombin İste' butonu görünecek.",
+    "active": "Kombin Yapabilirsiniz",
+    "active_desc": "Diğer kullanıcılar profilinizden size kombin talebi gönderebilir."
+  },
   "payment": {
     "commission_note": "Her kombin tamamlandığında, belirlediğiniz ücretten %10 platform komisyonu kesilir.",
     "card_info": "Ödeme Kartı",

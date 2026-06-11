@@ -27,12 +27,17 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_GAP = 4;
 const TILE_SIZE = (SCREEN_WIDTH - GRID_GAP * 4) / 3;
 
+import { RequestModal } from '../../src/components/ui/RequestModal';
+
 interface PublicUser {
   id: string;
   name: string | null;
   profilePhoto: string | null;
   instagramUrl: string | null;
+  bio: string | null;
   isStylist: boolean;
+  canStyle: boolean;
+  stylePrice: number | null;
 }
 
 export default function UserProfileScreen() {
@@ -45,6 +50,7 @@ export default function UserProfileScreen() {
   const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
 
@@ -67,7 +73,7 @@ export default function UserProfileScreen() {
     if (!userId) { setIsLoading(false); return; }
 
     Promise.all([
-      supabase.from('users').select('id, name, profile_photo, instagram_url').eq('id', userId).single(),
+      supabase.from('users').select('id, name, profile_photo, instagram_url, bio, can_style, style_price').eq('id', userId).single(),
       supabase.from('stylist_profiles').select('id').eq('user_id', userId).maybeSingle(),
       feedService.getFeedPosts(currentUser?.id),
       followService.getFollowStats(userId),
@@ -80,7 +86,10 @@ export default function UserProfileScreen() {
           name: u.name as string | null,
           profilePhoto: u.profile_photo as string | null,
           instagramUrl: u.instagram_url as string | null,
+          bio: u.bio as string | null,
           isStylist: !!stylistRes.data,
+          canStyle: !!(u.can_style),
+          stylePrice: u.style_price as number | null,
         });
       }
       setPosts(allPosts.filter(p => p.userId === userId));
@@ -174,6 +183,9 @@ export default function UserProfileScreen() {
             {profile.instagramUrl && (
               <Text style={styles.userInsta}>{profile.instagramUrl}</Text>
             )}
+            {profile.bio && (
+              <Text style={styles.userBio}>{profile.bio}</Text>
+            )}
             {profile.isStylist && (
               <Pressable
                 onPress={() => router.push(`/(tabs)/stylist-detail?id=${userId}`)}
@@ -181,6 +193,18 @@ export default function UserProfileScreen() {
               >
                 <Ionicons name="sparkles" size={14} color={colors.primary} />
                 <Text style={styles.stylistLinkText}>{t('profile.view_stylist_profile')}</Text>
+              </Pressable>
+            )}
+            {!isOwnProfile && (profile.canStyle || profile.isStylist) && (
+              <Pressable
+                onPress={() => setShowRequestModal(true)}
+                style={styles.requestProfileBtn}
+              >
+                <Ionicons name="color-palette-outline" size={16} color={colors.white} />
+                <Text style={styles.requestProfileText}>
+                  {t('stylists.request_short')}
+                  {profile.stylePrice ? ` · ${profile.stylePrice}₺` : ''}
+                </Text>
               </Pressable>
             )}
 
@@ -239,6 +263,15 @@ export default function UserProfileScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      {profile && (profile.canStyle || profile.isStylist) && (
+        <RequestModal
+          visible={showRequestModal}
+          onClose={() => setShowRequestModal(false)}
+          stylistId={profile.id}
+          stylistName={profile.name || 'Kullanıcı'}
+          openAddWardrobeItem={() => router.push('/(tabs)/add-wardrobe-item')}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -270,6 +303,18 @@ const styles = StyleSheet.create({
   followBtnTextActive: { color: colors.text },
   userName: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.text, marginTop: spacing.md },
   userInsta: { fontSize: fontSize.sm, color: colors.primary, marginTop: 2 },
+  userBio: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 18 },
+  requestProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    marginTop: spacing.sm,
+  },
+  requestProfileText: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.white },
   stylistLink: {
     flexDirection: 'row',
     alignItems: 'center',

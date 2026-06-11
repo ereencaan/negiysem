@@ -8,6 +8,7 @@ import { requestService } from '../../src/services/request.service';
 import { wardrobeService } from '../../src/services/wardrobe.service';
 import { followService, type FollowStats } from '../../src/services/follow.service';
 import { feedService, type FeedPost } from '../../src/services/feed.service';
+import { eligibilityService, type EligibilityStatus } from '../../src/services/eligibility.service';
 import { supabase } from '../../src/lib/supabase';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -30,6 +31,8 @@ export default function ProfileScreen() {
   const [bankInfo, setBankInfo] = useState({ iban: '', bankName: '', accountHolder: '' });
   const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0 });
   const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
+  const [eligibility, setEligibility] = useState<EligibilityStatus | null>(null);
+  const [canStyle, setCanStyle] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -37,6 +40,10 @@ export default function ProfileScreen() {
 
       followService.getFollowStats(user.id).then(setFollowStats);
       feedService.getFeedPosts(user.id).then(all => setMyPosts(all.filter(p => p.userId === user.id)));
+      eligibilityService.checkEligibility(user.id).then(setEligibility);
+      supabase.from('users').select('can_style').eq('id', user.id).single().then(({ data }) => {
+        if (data) setCanStyle((data as { can_style: boolean }).can_style);
+      });
 
       if (activeRole === 'stylist' && isStylist) {
         supabase.from('stylist_profiles').select('iban, bank_name, account_holder, price_per_outfit').eq('user_id', user.id).single()
@@ -241,9 +248,73 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {!isStylist && (
+        {/* Community Stylist Eligibility */}
+        {!canStyle && eligibility && (
+          <Card style={styles.eligibilityCard}>
+            <View style={styles.eligibilityHeader}>
+              <Ionicons name="sparkles" size={22} color={colors.primary} />
+              <View style={{ flex: 1, marginLeft: spacing.md }}>
+                <Text style={styles.eligibilityTitle}>{t('eligibility.title')}</Text>
+                <Text style={styles.eligibilitySubtitle}>
+                  {eligibility.metCount}/{eligibility.totalConditions} {t('eligibility.completed')}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${(eligibility.metCount / eligibility.totalConditions) * 100}%` }]} />
+            </View>
+
+            <View style={styles.conditionsList}>
+              <ConditionRow
+                met={eligibility.wardrobeCount >= eligibility.wardrobeRequired}
+                label={t('eligibility.wardrobe', { count: eligibility.wardrobeRequired })}
+                progress={`${eligibility.wardrobeCount}/${eligibility.wardrobeRequired}`}
+              />
+              <ConditionRow
+                met={eligibility.postsCount >= eligibility.postsRequired}
+                label={t('eligibility.posts', { count: eligibility.postsRequired })}
+                progress={`${eligibility.postsCount}/${eligibility.postsRequired}`}
+              />
+              <ConditionRow
+                met={eligibility.totalLikes >= eligibility.likesRequired}
+                label={t('eligibility.likes', { count: eligibility.likesRequired })}
+                progress={`${eligibility.totalLikes}/${eligibility.likesRequired}`}
+              />
+              <ConditionRow
+                met={eligibility.followingCount >= eligibility.followingRequired}
+                label={t('eligibility.following', { count: eligibility.followingRequired })}
+                progress={`${eligibility.followingCount}/${eligibility.followingRequired}`}
+              />
+              <ConditionRow
+                met={eligibility.profileComplete}
+                label={t('eligibility.profile')}
+                progress={eligibility.profileComplete ? '✓' : `${eligibility.hasProfilePhoto ? '1' : '0'}/2`}
+              />
+            </View>
+
+            {eligibility.allMet && (
+              <Button
+                title={t('eligibility.activate')}
+                onPress={() => router.push('/(tabs)/activate-styling')}
+              />
+            )}
+          </Card>
+        )}
+
+        {canStyle && !isStylist && (
+          <Card style={styles.promoCard}>
+            <Ionicons name="checkmark-circle" size={22} color={colors.success} />
+            <View style={styles.promoContent}>
+              <Text style={styles.promoTitle}>{t('eligibility.active')}</Text>
+              <Text style={styles.promoDesc}>{t('eligibility.active_desc')}</Text>
+            </View>
+          </Card>
+        )}
+
+        {!isStylist && !canStyle && (
           <Card style={styles.promoCard} onPress={() => router.push('/(tabs)/become-stylist')}>
-            <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
+            <Ionicons name="school-outline" size={22} color={colors.primary} />
             <View style={styles.promoContent}>
               <Text style={styles.promoTitle}>{t('stylist.become_stylist')}</Text>
               <Text style={styles.promoDesc}>{t('stylist.become_stylist_description')}</Text>
@@ -281,6 +352,28 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
+
+function ConditionRow({ met, label, progress }: { met: boolean; label: string; progress: string }) {
+  return (
+    <View style={condStyles.row}>
+      <Ionicons
+        name={met ? 'checkmark-circle' : 'ellipse-outline'}
+        size={20}
+        color={met ? colors.success : colors.textLight}
+      />
+      <Text style={[condStyles.label, met && condStyles.labelMet]}>{label}</Text>
+      <Text style={[condStyles.progress, met && condStyles.progressMet]}>{progress}</Text>
+    </View>
+  );
+}
+
+const condStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
+  label: { flex: 1, fontSize: fontSize.sm, color: colors.text },
+  labelMet: { color: colors.success },
+  progress: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.textSecondary },
+  progressMet: { color: colors.success },
+});
 
 function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
@@ -338,6 +431,23 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 10, color: colors.textSecondary, marginTop: 2, textAlign: 'center' },
   section: { marginBottom: spacing.lg },
   cardTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.text, marginBottom: spacing.sm },
+  eligibilityCard: { marginBottom: spacing.lg },
+  eligibilityHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  eligibilityTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
+  eligibilitySubtitle: { fontSize: fontSize.xs, color: colors.textSecondary, marginTop: 2 },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: colors.borderLight,
+    borderRadius: 3,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: 6,
+    backgroundColor: colors.primary,
+    borderRadius: 3,
+  },
+  conditionsList: { marginBottom: spacing.md },
   promoCard: {
     flexDirection: 'row',
     alignItems: 'center',
