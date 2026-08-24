@@ -18,7 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 import { supabase, getStorageUrl } from '../../src/lib/supabase';
 import { followService, type FollowStats } from '../../src/services/follow.service';
-import { feedService, type FeedPost } from '../../src/services/feed.service';
+import { feedService, type FeedPost, type PostComment } from '../../src/services/feed.service';
+import { TextInput as RNTextInput } from 'react-native';
 import { Avatar } from '../../src/components/ui/Avatar';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../src/constants/theme';
@@ -53,6 +54,32 @@ export default function UserProfileScreen() {
   const [showRequestModal, setShowRequestModal] = useState(false);
 
   const [selectedPost, setSelectedPost] = useState<FeedPost | null>(null);
+  const [modalComments, setModalComments] = useState<PostComment[]>([]);
+  const [modalCommentInput, setModalCommentInput] = useState('');
+  const [modalCommentsLoading, setModalCommentsLoading] = useState(false);
+  const [modalSending, setModalSending] = useState(false);
+
+  const openPostDetail = async (post: FeedPost) => {
+    setSelectedPost(post);
+    setModalCommentsLoading(true);
+    const data = await feedService.getComments(post.id);
+    setModalComments(data);
+    setModalCommentsLoading(false);
+  };
+
+  const sendModalComment = async () => {
+    if (!currentUser || !selectedPost || !modalCommentInput.trim()) return;
+    setModalSending(true);
+    const result = await feedService.addComment(selectedPost.id, currentUser.id, modalCommentInput.trim());
+    if (result.data) {
+      setModalCommentInput('');
+      const data = await feedService.getComments(selectedPost.id);
+      setModalComments(data);
+      setPosts(prev => prev.map(p => p.id === selectedPost.id ? { ...p, commentsCount: data.length } : p));
+      setSelectedPost(prev => prev ? { ...prev, commentsCount: data.length } : null);
+    }
+    setModalSending(false);
+  };
 
   const handleLike = async (post: FeedPost) => {
     if (!currentUser) return;
@@ -130,8 +157,26 @@ export default function UserProfileScreen() {
   const isOwnProfile = currentUser?.id === userId;
 
   const renderTile = ({ item }: { item: FeedPost }) => (
-    <Pressable onPress={() => setSelectedPost(item)} style={styles.tile}>
+    <Pressable onPress={() => openPostDetail(item)} style={styles.tile}>
       <Image source={{ uri: item.imageUrl }} style={styles.tileImage} />
+      <View style={styles.tileStats}>
+        <Pressable
+          onPress={(e) => { e.stopPropagation?.(); handleLike(item); }}
+          hitSlop={4}
+          style={styles.tileStatItem}
+        >
+          <Ionicons
+            name={item.isLiked ? 'heart' : 'heart-outline'}
+            size={14}
+            color={item.isLiked ? '#ff4757' : colors.white}
+          />
+          <Text style={styles.tileStatText}>{item.likesCount}</Text>
+        </Pressable>
+        <View style={styles.tileStatItem}>
+          <Ionicons name="chatbubble" size={12} color={colors.white} />
+          <Text style={styles.tileStatText}>{item.commentsCount}</Text>
+        </View>
+      </View>
     </Pressable>
   );
 
@@ -255,6 +300,44 @@ export default function UserProfileScreen() {
                     <Text style={styles.modalCaptionText}> {selectedPost.caption}</Text>
                   </View>
                 )}
+
+                {/* Comments */}
+                <View style={styles.commentsSection}>
+                  <Text style={styles.commentsTitle}>{t('feed.comments')}</Text>
+                  {modalCommentsLoading ? (
+                    <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+                  ) : modalComments.length === 0 ? (
+                    <Text style={styles.noComments}>{t('feed.no_comments')}</Text>
+                  ) : (
+                    modalComments.map(c => (
+                      <View key={c.id} style={styles.commentItem}>
+                        <Text style={styles.commentUser}>{c.userName || 'Kullanıcı'}</Text>
+                        <Text style={styles.commentText}>{c.content}</Text>
+                      </View>
+                    ))
+                  )}
+                </View>
+
+                {/* Comment input */}
+                {currentUser && (
+                  <View style={styles.commentInputRow}>
+                    <RNTextInput
+                      style={styles.commentInput}
+                      value={modalCommentInput}
+                      onChangeText={setModalCommentInput}
+                      placeholder={t('feed.add_comment')}
+                      placeholderTextColor={colors.textLight}
+                    />
+                    <Pressable
+                      onPress={sendModalComment}
+                      disabled={!modalCommentInput.trim() || modalSending}
+                      style={[styles.sendCommentBtn, (!modalCommentInput.trim() || modalSending) && { opacity: 0.5 }]}
+                    >
+                      <Ionicons name="send" size={18} color={colors.white} />
+                    </Pressable>
+                  </View>
+                )}
+
                 <Pressable onPress={() => setSelectedPost(null)} style={styles.modalCloseBtn}>
                   <Text style={styles.modalCloseText}>{t('common.back')}</Text>
                 </Pressable>
@@ -343,8 +426,66 @@ const styles = StyleSheet.create({
     width: TILE_SIZE,
     height: TILE_SIZE,
     marginBottom: GRID_GAP,
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: borderRadius.sm,
   },
   tileImage: { width: '100%', height: '100%', backgroundColor: colors.surface },
+  tileStats: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  tileStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  tileStatText: { fontSize: 11, color: colors.white, fontWeight: fontWeight.semibold },
+  commentsSection: {
+    padding: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    maxHeight: 200,
+  },
+  commentsTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.text, marginBottom: spacing.sm },
+  noComments: { fontSize: fontSize.xs, color: colors.textLight, fontStyle: 'italic', textAlign: 'center', paddingVertical: spacing.md },
+  commentItem: { marginBottom: spacing.sm },
+  commentUser: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.text },
+  commentText: { fontSize: fontSize.sm, color: colors.text, marginTop: 2 },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    fontSize: fontSize.sm,
+    color: colors.text,
+    backgroundColor: colors.surface,
+  },
+  sendCommentBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
