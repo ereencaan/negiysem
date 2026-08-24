@@ -222,6 +222,10 @@ export default function ClientWardrobeScreen() {
             numColumns={2}
             columnWrapperStyle={styles.row}
             contentContainerStyle={styles.list}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={5}
+            removeClippedSubviews
             ListFooterComponent={
               canPropose && showProposal ? (
                 <Card style={styles.proposalCard}>

@@ -25,6 +25,7 @@ export default function WardrobeScreen() {
   const router = useRouter();
   const [items, setItems] = useState<WardrobeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = [
@@ -42,6 +43,7 @@ export default function WardrobeScreen() {
     if (!user) {
       setItems([]);
       setIsLoading(false);
+      setHasLoadedOnce(true);
       return;
     }
     try {
@@ -49,6 +51,7 @@ export default function WardrobeScreen() {
       setItems(data);
     } finally {
       setIsLoading(false);
+      setHasLoadedOnce(true);
     }
   }, [user, authLoading]);
 
@@ -79,7 +82,7 @@ export default function WardrobeScreen() {
     </View>
   );
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedOnce) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loading}>
@@ -136,6 +139,10 @@ export default function WardrobeScreen() {
             numColumns={2}
             columnWrapperStyle={styles.row}
             contentContainerStyle={styles.list}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={5}
+            removeClippedSubviews
           />
         )}
 

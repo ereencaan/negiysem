@@ -34,6 +34,7 @@ export default function OutfitsScreen() {
   const router = useRouter();
   const [requests, setRequests] = useState<OutfitRequestWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -41,6 +42,7 @@ export default function OutfitsScreen() {
       if (!user) {
         setRequests([]);
         setIsLoading(false);
+        setHasLoadedOnce(true);
         return;
       }
       const load = activeRole === 'stylist'
@@ -49,7 +51,10 @@ export default function OutfitsScreen() {
 
       load
         .then(data => setRequests(data))
-        .finally(() => setIsLoading(false));
+        .finally(() => {
+          setIsLoading(false);
+          setHasLoadedOnce(true);
+        });
     }, [user, activeRole, authLoading]),
   );
 
@@ -81,7 +86,7 @@ export default function OutfitsScreen() {
     </Card>
   );
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedOnce) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loading}>
@@ -113,6 +118,10 @@ export default function OutfitsScreen() {
         renderItem={renderRequest}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        removeClippedSubviews
       />
     </SafeAreaView>
   );

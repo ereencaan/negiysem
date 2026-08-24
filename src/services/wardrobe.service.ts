@@ -21,7 +21,11 @@ function mapItem(db: DbWardrobeItem): WardrobeItem {
   const { photo_path, ...rest } = db;
   return {
     ...rest,
-    photoUrl: photo_path ? (getStorageUrl(photo_path) ?? '') : '',
+    photoUrl: photo_path
+      ? (photo_path.startsWith('http://') || photo_path.startsWith('https://')
+          ? photo_path
+          : (getStorageUrl(`wardrobe/${photo_path}`) ?? ''))
+      : '',
   };
 }
 
