@@ -11,7 +11,7 @@ VALUES
   (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'mehmet@negiysem.com', crypt('Test1234!', gen_salt('bf')), now(), '{"name":"Mehmet Kaya","phone":"05303334455"}'::jsonb, '{"provider":"email","providers":["email"]}'::jsonb, now(), now(), '', '', '', '', '', '', '', ''),
   (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'zeynep@negiysem.com', crypt('Test1234!', gen_salt('bf')), now(), '{"name":"Zeynep Çelik","phone":"05304445566"}'::jsonb, '{"provider":"email","providers":["email"]}'::jsonb, now(), now(), '', '', '', '', '', '', '', ''),
   (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'emre@negiysem.com', crypt('Test1234!', gen_salt('bf')), now(), '{"name":"Emre Aksoy","phone":"05305556677"}'::jsonb, '{"provider":"email","providers":["email"]}'::jsonb, now(), now(), '', '', '', '', '', '', '', '')
-ON CONFLICT (email) DO NOTHING;
+;
 
 -- 5 Stilist Kullanıcıları
 INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_user_meta_data, raw_app_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change_token_current, email_change, phone_change, phone_change_token, reauthentication_token)
@@ -21,7 +21,7 @@ VALUES
   (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'stilist.ece@negiysem.com', crypt('Test1234!', gen_salt('bf')), now(), '{"name":"Ece Şahin","phone":"05403334455"}'::jsonb, '{"provider":"email","providers":["email"]}'::jsonb, now(), now(), '', '', '', '', '', '', '', ''),
   (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'stilist.burcu@negiysem.com', crypt('Test1234!', gen_salt('bf')), now(), '{"name":"Burcu Yılmaz","phone":"05404445566"}'::jsonb, '{"provider":"email","providers":["email"]}'::jsonb, now(), now(), '', '', '', '', '', '', '', ''),
   (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'stilist.ceren@negiysem.com', crypt('Test1234!', gen_salt('bf')), now(), '{"name":"Ceren Özdemir","phone":"05405556677"}'::jsonb, '{"provider":"email","providers":["email"]}'::jsonb, now(), now(), '', '', '', '', '', '', '', '')
-ON CONFLICT (email) DO NOTHING;
+;
 
 -- Auth identities (required for sign-in)
 INSERT INTO auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
