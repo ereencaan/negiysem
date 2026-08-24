@@ -106,11 +106,19 @@ export default function AddWardrobeItemScreen() {
 
     if (result.error) {
       setFormError(t(result.error));
+      setIsSubmitting(false);
     } else {
+      // Reset form
+      setPhotoUri(null);
+      setCategory('');
+      setSeason('');
+      setColor('');
+      setBrand('');
+      setDescription('');
+      setIsSubmitting(false);
       Alert.alert(t('wardrobe.item_added'));
       router.back();
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -234,8 +242,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   photoBtnText: { fontSize: fontSize.xs, color: colors.primary, fontWeight: fontWeight.medium, textAlign: 'center' },
-  photoPreviewContainer: { marginBottom: spacing.xl, borderRadius: borderRadius.lg, overflow: 'hidden' },
-  photoPreview: { width: '100%', aspectRatio: 1, borderRadius: borderRadius.lg },
+  photoPreviewContainer: {
+    marginBottom: spacing.xl,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    width: 240,
+    height: 240,
+    backgroundColor: colors.surface,
+  },
+  photoPreview: { width: '100%', height: '100%', borderRadius: borderRadius.lg, resizeMode: 'cover' },
   photoOverlay: {
     position: 'absolute',
     bottom: 0,
