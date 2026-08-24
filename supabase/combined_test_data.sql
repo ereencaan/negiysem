@@ -56,7 +56,7 @@ UZMANLIK ALANLARI
 • Akşam ve davet kıyafetleri
 • Gardırop analizi ve planlama', '@selinaydinstil', 175.00, 4.9, 48, true
 FROM public.users WHERE email = 'stilist.selin@negiysem.com'
-ON CONFLICT (user_id) DO UPDATE SET bio = EXCLUDED.bio, cv_text = EXCLUDED.cv_text, price_per_outfit = EXCLUDED.price_per_outfit, rating = EXCLUDED.rating, total_reviews = EXCLUDED.total_reviews, is_verified = EXCLUDED.is_verified;
+;
 
 INSERT INTO public.stylist_profiles (user_id, bio, cv_text, instagram_url, price_per_outfit, rating, total_reviews, is_verified)
 SELECT id, 'Minimalist tarz uzmanı. Kapsül gardırop oluşturma ve sürdürülebilir moda.', 'EĞİTİM
@@ -76,7 +76,7 @@ UZMANLIK ALANLARI
 • Sürdürülebilir moda ve etik markalar
 • Nötr ton paletleri', '@denizkorkmaz', 130.00, 4.7, 32, true
 FROM public.users WHERE email = 'stilist.deniz@negiysem.com'
-ON CONFLICT (user_id) DO UPDATE SET bio = EXCLUDED.bio, cv_text = EXCLUDED.cv_text, price_per_outfit = EXCLUDED.price_per_outfit, rating = EXCLUDED.rating, total_reviews = EXCLUDED.total_reviews, is_verified = EXCLUDED.is_verified;
+;
 
 INSERT INTO public.stylist_profiles (user_id, bio, cv_text, instagram_url, price_per_outfit, rating, total_reviews, is_verified)
 SELECT id, 'Streetwear ve casual kombin uzmanı. Gençlere özel stil danışmanlığı.', 'EĞİTİM
@@ -96,7 +96,7 @@ UZMANLIK ALANLARI
 • Genç ve öğrenci bütçesine uygun kombinler
 • Y2K, 90s retro akımları', '@ecesahinstyle', 100.00, 4.5, 21, true
 FROM public.users WHERE email = 'stilist.ece@negiysem.com'
-ON CONFLICT (user_id) DO UPDATE SET bio = EXCLUDED.bio, cv_text = EXCLUDED.cv_text, price_per_outfit = EXCLUDED.price_per_outfit, rating = EXCLUDED.rating, total_reviews = EXCLUDED.total_reviews, is_verified = EXCLUDED.is_verified;
+;
 
 INSERT INTO public.stylist_profiles (user_id, bio, cv_text, instagram_url, price_per_outfit, rating, total_reviews, is_verified)
 SELECT id, 'Düğün ve özel gün stilisti. Şıklığınızı garanti altına alıyorum.', 'EĞİTİM
@@ -115,7 +115,7 @@ UZMANLIK ALANLARI
 • Nişan & kına gecesi tematik stil
 • Kokteyl ve gala davetleri', '@burcuyilmazmode', 220.00, 4.8, 55, true
 FROM public.users WHERE email = 'stilist.burcu@negiysem.com'
-ON CONFLICT (user_id) DO UPDATE SET bio = EXCLUDED.bio, cv_text = EXCLUDED.cv_text, price_per_outfit = EXCLUDED.price_per_outfit, rating = EXCLUDED.rating, total_reviews = EXCLUDED.total_reviews, is_verified = EXCLUDED.is_verified;
+;
 
 INSERT INTO public.stylist_profiles (user_id, bio, cv_text, instagram_url, price_per_outfit, rating, total_reviews, is_verified)
 SELECT id, 'Ofis ve iş hayatı kombincisi. Profesyonel görünümünüzü bir üst seviyeye taşıyın.', 'EĞİTİM
@@ -133,7 +133,7 @@ UZMANLIK ALANLARI
 • İş görüşmesi / sunum kombinleri
 • Executive presence & authority styling', '@cerenozdemir', 140.00, 4.6, 38, true
 FROM public.users WHERE email = 'stilist.ceren@negiysem.com'
-ON CONFLICT (user_id) DO UPDATE SET bio = EXCLUDED.bio, cv_text = EXCLUDED.cv_text, price_per_outfit = EXCLUDED.price_per_outfit, rating = EXCLUDED.rating, total_reviews = EXCLUDED.total_reviews, is_verified = EXCLUDED.is_verified;
+;
 
 -- =============================================
 -- 50 OUTFIT POSTS (10 per stylist)
