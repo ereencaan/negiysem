@@ -26,21 +26,17 @@ const REQUIREMENTS = {
 
 export const eligibilityService = {
   async checkEligibility(userId: string): Promise<EligibilityStatus> {
-    const [wardrobeRes, postsRes, likesRes, followingRes, userRes] = await Promise.all([
+    const [wardrobeRes, postsRes, followingRes, userRes, userPostsRes] = await Promise.all([
       supabase.from('wardrobe_items').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_active', true),
       supabase.from('feed_posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      supabase.from('post_likes').select('id', { count: 'exact', head: true }).in(
-        'post_id',
-        supabase.from('feed_posts').select('id').eq('user_id', userId) as unknown as string[],
-      ),
       supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', userId),
-      supabase.from('users').select('profile_photo, bio').eq('id', userId).single(),
+      supabase.from('users').select('profile_photo, bio').eq('id', userId).maybeSingle(),
+      supabase.from('feed_posts').select('likes_count').eq('user_id', userId),
     ]);
 
-    // Likes count needs a different approach since .in with subquery doesn't work well
     let totalLikes = 0;
-    const { data: userPosts } = await supabase.from('feed_posts').select('likes_count').eq('user_id', userId);
-    if (userPosts) {
+    const userPosts = userPostsRes.data;
+    if (userPosts && Array.isArray(userPosts)) {
       totalLikes = userPosts.reduce((sum, p) => sum + ((p as { likes_count: number }).likes_count || 0), 0);
     }
 
